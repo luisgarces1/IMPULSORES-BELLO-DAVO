@@ -3,14 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { LUGARES_VOTACION } from '@/constants/locations';
+import { SearchableSelect } from '@/components/SearchableSelect';
 
-const LUGARES_VOTACION = [
-  'Jesús de la Buena Esperanza',
-  'Colegio Americano',
-  'Institución Educativa Marco Fidel Suárez',
-  'Coliseo Tulio Ospina',
-  'Otro',
-];
+
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -32,7 +28,7 @@ export default function Registro() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.cedula || !formData.nombre || !formData.lugarVotacion) {
       setError('Por favor completa todos los campos requeridos');
       return;
@@ -127,11 +123,11 @@ export default function Registro() {
       </header>
 
       {/* Form */}
-      <main className="max-w-xl mx-auto px-6 py-12">
+      <main className="max-w-xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="mb-8">
-          <h2 className="text-2xl font-display font-bold mb-2">Registrarse como Líder</h2>
-          <p className="text-muted-foreground">
-            Completa el formulario para registrarte como líder electoral. 
+          <h2 className="text-xl md:text-2xl font-display font-bold mb-2">Registrarse como Líder</h2>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Completa el formulario para registrarte como líder electoral.
             Tu solicitud será revisada por un administrador.
           </p>
         </div>
@@ -188,21 +184,12 @@ export default function Registro() {
             <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
               Lugar de Votación <span className="text-destructive">*</span>
             </label>
-            <select
-              id="lugarVotacion"
-              name="lugarVotacion"
+            <SearchableSelect
+              options={LUGARES_VOTACION}
               value={formData.lugarVotacion}
-              onChange={handleChange}
-              className="input-field"
-              required
-            >
-              <option value="">Selecciona un lugar</option>
-              {LUGARES_VOTACION.map((lugar) => (
-                <option key={lugar} value={lugar}>
-                  {lugar}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setFormData({ ...formData, lugarVotacion: value })}
+              placeholder="Selecciona un lugar..."
+            />
           </div>
 
           <div>

@@ -9,12 +9,12 @@ interface StatCardProps {
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'destructive';
 }
 
-export function StatCard({ 
-  title, 
-  value, 
-  icon: Icon, 
+export function StatCard({
+  title,
+  value,
+  icon: Icon,
   description,
-  variant = 'default' 
+  variant = 'default'
 }: StatCardProps) {
   const iconColors = {
     default: 'text-muted-foreground',
@@ -37,7 +37,7 @@ export function StatCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-          <p className="text-3xl font-bold font-display text-foreground">{value}</p>
+          <p className="text-2xl md:text-3xl font-bold font-display text-foreground">{value}</p>
           {description && (
             <p className="text-xs text-muted-foreground mt-2">{description}</p>
           )}

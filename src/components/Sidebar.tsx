@@ -1,18 +1,24 @@
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { 
-  LayoutDashboard, 
-  Users, 
-  UserPlus, 
+import {
+  LayoutDashboard,
+  Users,
+  UserPlus,
   ClipboardList,
   LogOut,
   Shield,
-  Vote
+  Vote,
+  Menu,
+  X
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export function Sidebar() {
   const { nombre, isAdmin, logout, cedula } = useAuth();
   const location = useLocation();
+  const [open, setOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -24,8 +30,8 @@ export function Sidebar() {
     { path: '/registrar-asociado', icon: UserPlus, label: 'Registrar Asociado', show: !isAdmin },
   ];
 
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col">
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-sidebar">
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -70,6 +76,7 @@ export function Sidebar() {
           <Link
             key={item.path}
             to={item.path}
+            onClick={() => setOpen(false)}
             className={`sidebar-item ${isActive(item.path) ? 'active' : ''}`}
           >
             <item.icon className="w-5 h-5" />
@@ -88,6 +95,30 @@ export function Sidebar() {
           <span>Cerrar Sesión</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Toggle */}
+      <div className="md:hidden fixed top-4 right-4 z-50">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="bg-card shadow-md">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64 border-none">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-sidebar flex-col border-r border-sidebar-border shadow-xl">
+        <SidebarContent />
+      </aside>
+    </>
   );
 }
+

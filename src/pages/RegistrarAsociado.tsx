@@ -4,14 +4,10 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { UserPlus, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { LUGARES_VOTACION } from '@/constants/locations';
+import { SearchableSelect } from '@/components/SearchableSelect';
 
-const LUGARES_VOTACION = [
-  'Jesús de la Buena Esperanza',
-  'Colegio Americano',
-  'Institución Educativa Marco Fidel Suárez',
-  'Coliseo Tulio Ospina',
-  'Otro',
-];
+
 
 export default function RegistrarAsociado() {
   const { cedula: cedulaLider } = useAuth();
@@ -34,7 +30,7 @@ export default function RegistrarAsociado() {
         .select('*', { count: 'exact', head: true })
         .eq('cedula_lider', cedulaLider)
         .eq('rol', 'asociado');
-      
+
       setCountAsociados(count || 0);
     };
     checkCount();
@@ -112,13 +108,13 @@ export default function RegistrarAsociado() {
 
   return (
     <Layout>
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+          <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
             Registrar Asociado
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Agrega un nuevo integrante a tu equipo de testigos electorales
           </p>
         </div>
@@ -193,21 +189,12 @@ export default function RegistrarAsociado() {
                 <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
                   Lugar de Votación <span className="text-destructive">*</span>
                 </label>
-                <select
-                  id="lugarVotacion"
-                  name="lugarVotacion"
+                <SearchableSelect
+                  options={LUGARES_VOTACION}
                   value={formData.lugarVotacion}
-                  onChange={handleChange}
-                  className="input-field"
-                  required
-                >
-                  <option value="">Selecciona un lugar</option>
-                  {LUGARES_VOTACION.map((lugar) => (
-                    <option key={lugar} value={lugar}>
-                      {lugar}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData({ ...formData, lugarVotacion: value })}
+                  placeholder="Selecciona un lugar..."
+                />
               </div>
 
               <div>

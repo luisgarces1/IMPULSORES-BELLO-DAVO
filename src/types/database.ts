@@ -8,6 +8,9 @@ export interface Persona {
   telefono: string | null;
   rol: UserRole;
   cedula_lider: string | null;
+  lider?: {
+    nombre_completo: string;
+  };
   lugar_votacion: string | null;
   municipio_votacion: string | null;
   vota_en_bello: boolean;
@@ -29,7 +32,14 @@ export interface DashboardStats {
   totalAsociados: number;
   votanEnBello: number;
   noVotanBello: number;
-  pendientes: number;
-  aprobados: number;
-  rechazados: number;
+  lideres: {
+    pendientes: number;
+    aprobados: number;
+    rechazados: number;
+  };
+  asociados: {
+    pendientes: number;
+    aprobados: number;
+    rechazados: number;
+  };
 }
