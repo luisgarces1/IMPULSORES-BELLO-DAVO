@@ -4,6 +4,8 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Vote, Shield, User, ArrowRight, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import FaceLogin from '@/components/face-auth/FaceLogin';
+import FaceRegistration from '@/components/face-auth/FaceRegistration';
 
 type LoginMode = 'lider' | 'admin';
 
@@ -94,7 +96,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Panel - Branding */}
-      <div 
+      <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
         style={{ background: 'var(--gradient-hero)' }}
       >
@@ -155,11 +157,10 @@ export default function Login() {
             <button
               type="button"
               onClick={() => { setMode('lider'); setError(''); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'lider'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all ${mode === 'lider'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               <User className="w-4 h-4" />
               Líder
@@ -167,11 +168,10 @@ export default function Login() {
             <button
               type="button"
               onClick={() => { setMode('admin'); setError(''); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'admin'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-sm font-medium transition-all ${mode === 'admin'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               <Shield className="w-4 h-4" />
               Administrador
@@ -195,19 +195,26 @@ export default function Login() {
                 />
               </div>
             ) : (
-              <div>
-                <label htmlFor="codigo" className="block text-sm font-medium mb-2">
-                  Código de Administrador
-                </label>
-                <input
-                  id="codigo"
-                  type="password"
-                  value={codigoAdmin}
-                  onChange={(e) => setCodigoAdmin(e.target.value)}
-                  placeholder="Ingresa el código maestro"
-                  className="input-field"
-                  autoComplete="off"
-                />
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="codigo" className="block text-sm font-medium mb-2">
+                    Código de Administrador
+                  </label>
+                  <input
+                    id="codigo"
+                    type="password"
+                    value={codigoAdmin}
+                    onChange={(e) => setCodigoAdmin(e.target.value)}
+                    placeholder="Ingresa el código maestro"
+                    className="input-field"
+                    autoComplete="off"
+                  />
+                </div>
+                {/* Face Auth Components */}
+                <div className="pt-2 border-t border-border">
+                  <FaceLogin />
+                  <FaceRegistration />
+                </div>
               </div>
             )}
 
