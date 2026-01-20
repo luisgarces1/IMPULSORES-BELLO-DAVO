@@ -4,7 +4,8 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona, EstadoRegistro } from '@/types/database';
-import { Search, MapPin, Users, UserCheck, Clock } from 'lucide-react';
+import { EditPersonaModal } from '@/components/EditPersonaModal';
+import { Search, MapPin, Users, UserCheck, Clock, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Asociados() {
@@ -16,6 +17,8 @@ export default function Asociados() {
   const [filterBello, setFilterBello] = useState<'TODOS' | 'SI' | 'NO'>('TODOS');
   const [filterLider, setFilterLider] = useState<string>('TODOS');
   const [lideres, setLideres] = useState<Persona[]>([]);
+  const [editingAsociado, setEditingAsociado] = useState<Persona | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     fetchAsociados();
@@ -79,6 +82,47 @@ export default function Asociados() {
     } catch (error) {
       console.error('Error updating estado:', error);
       toast.error('Error al actualizar el estado');
+    }
+  };
+
+  const handleSaveAsociado = async (updatedAsociado: Persona) => {
+    try {
+      const { error } = await supabase
+        .from('personas')
+        .update({
+          nombre_completo: updatedAsociado.nombre_completo,
+          telefono: updatedAsociado.telefono,
+          lugar_votacion: updatedAsociado.lugar_votacion,
+          vota_en_bello: updatedAsociado.vota_en_bello,
+          cedula_lider: updatedAsociado.cedula_lider,
+        })
+        .eq('cedula', updatedAsociado.cedula);
+
+      if (error) throw error;
+
+      // Update local state is a bit tricky for 'lider' object relation.
+      // We will optimistic update the fields but for 'lider' name update we might need to look it up or just fetch again.
+      // For now, let's update what we can. If cedula_lider changed, we might want to update the displayed leader name.
+
+      const newLiderName = lideres.find(l => l.cedula === updatedAsociado.cedula_lider)?.nombre_completo;
+
+      setAsociados((prev) =>
+        prev.map((p) =>
+          p.cedula === updatedAsociado.cedula
+            ? {
+              ...p,
+              ...updatedAsociado,
+              lider: newLiderName ? { nombre_completo: newLiderName } : p.lider
+            }
+            : p
+        )
+      );
+
+      toast.success('Asociado actualizado correctamente');
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating asociado:', error);
+      toast.error('Error al actualizar el asociado');
     }
   };
 
@@ -283,17 +327,29 @@ export default function Asociados() {
                       </td>
                       {isAdmin && (
                         <td className="py-4 px-6 text-center">
-                          <select
-                            value={asociado.estado}
-                            onChange={(e) =>
-                              updateEstado(asociado.cedula, e.target.value as EstadoRegistro)
-                            }
-                            className="text-xs px-2 py-1 bg-background border border-border rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="PENDIENTE">Pendiente</option>
-                            <option value="APROBADO">Aprobado</option>
-                            <option value="RECHAZADO">Rechazado</option>
-                          </select>
+                          <div className="flex items-center justify-center gap-2">
+                            <select
+                              value={asociado.estado}
+                              onChange={(e) =>
+                                updateEstado(asociado.cedula, e.target.value as EstadoRegistro)
+                              }
+                              className="text-xs px-2 py-1 bg-background border border-border rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                            >
+                              <option value="PENDIENTE">Pendiente</option>
+                              <option value="APROBADO">Aprobado</option>
+                              <option value="RECHAZADO">Rechazado</option>
+                            </select>
+                            <button
+                              onClick={() => {
+                                setEditingAsociado(asociado);
+                                setIsEditModalOpen(true);
+                              }}
+                              className="p-1.5 hover:bg-muted rounded-md transition-colors"
+                              title="Editar Asociado"
+                            >
+                              <Pencil className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -303,7 +359,19 @@ export default function Asociados() {
             </table>
           </div>
         </div>
-      </div>
-    </Layout>
+
+        <EditPersonaModal
+          person={editingAsociado}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingAsociado(null);
+          }}
+          onSave={handleSaveAsociado}
+          lideres={lideres}
+        />
+
+      </div >
+    </Layout >
   );
 }

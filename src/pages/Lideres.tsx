@@ -3,7 +3,8 @@ import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona, EstadoRegistro, LiderWithStats } from '@/types/database';
-import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle } from 'lucide-react';
+import { EditPersonaModal } from '@/components/EditPersonaModal';
+import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Lideres() {
@@ -11,6 +12,8 @@ export default function Lideres() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState<EstadoRegistro | 'TODOS'>('TODOS');
+  const [editingLider, setEditingLider] = useState<Persona | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     fetchLideres();
@@ -72,6 +75,36 @@ export default function Lideres() {
     } catch (error) {
       console.error('Error updating estado:', error);
       toast.error('Error al actualizar el estado');
+    }
+  };
+
+  const handleSaveLider = async (updatedLider: Persona) => {
+    try {
+      const { error } = await supabase
+        .from('personas')
+        .update({
+          nombre_completo: updatedLider.nombre_completo,
+          telefono: updatedLider.telefono,
+          lugar_votacion: updatedLider.lugar_votacion,
+          vota_en_bello: updatedLider.vota_en_bello,
+        })
+        .eq('cedula', updatedLider.cedula);
+
+      if (error) throw error;
+
+      setLideres((prev) =>
+        prev.map((p) =>
+          p.cedula === updatedLider.cedula
+            ? { ...p, ...updatedLider }
+            : p
+        )
+      );
+
+      toast.success('Líder actualizado correctamente');
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating lider:', error);
+      toast.error('Error al actualizar el líder');
     }
   };
 
@@ -196,23 +229,21 @@ export default function Lideres() {
             </div>
           ) : (
             filteredLideres.map((lider) => (
-              <div key={lider.cedula} className="glass-panel p-6 animate-fade-in flex flex-col">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-lg font-bold text-primary">
-                        {lider.nombre_completo.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-foreground truncate" title={lider.nombre_completo}>
-                        {lider.nombre_completo}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">CC: {lider.cedula}</p>
-                    </div>
+              <div key={lider.cedula} className="glass-panel p-6 animate-fade-in flex flex-col relative group">
+                <div className="absolute top-6 right-6">
+                  <StatusBadge estado={lider.estado} />
+                </div>
+                <div className="flex items-start gap-4 mb-6 pr-24">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-lg font-bold text-primary">
+                      {lider.nombre_completo.charAt(0).toUpperCase()}
+                    </span>
                   </div>
-                  <div className="shrink-0">
-                    <StatusBadge estado={lider.estado} />
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-foreground truncate" title={lider.nombre_completo}>
+                      {lider.nombre_completo}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">CC: {lider.cedula}</p>
                   </div>
                 </div>
 
@@ -252,24 +283,51 @@ export default function Lideres() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest pl-1">
-                    Cambiar Estado
-                  </label>
-                  <select
-                    value={lider.estado}
-                    onChange={(e) => updateEstado(lider.cedula, e.target.value as EstadoRegistro)}
-                    className="w-full text-sm px-3 py-2.5 bg-background border border-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                  >
-                    <option value="PENDIENTE">Pendiente</option>
-                    <option value="APROBADO">Aprobado</option>
-                    <option value="RECHAZADO">Rechazado</option>
-                  </select>
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/50">
+                  <div className="space-y-2 flex-1">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest pl-1">
+                      Cambiar Estado
+                    </label>
+                    <select
+                      value={lider.estado}
+                      onChange={(e) => updateEstado(lider.cedula, e.target.value as EstadoRegistro)}
+                      className="w-full text-sm px-3 py-2.5 bg-background border border-border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                    >
+                      <option value="PENDIENTE">Pendiente</option>
+                      <option value="APROBADO">Aprobado</option>
+                      <option value="RECHAZADO">Rechazado</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest pl-1 invisible">
+                      Editar
+                    </label>
+                    <button
+                      onClick={() => {
+                        setEditingLider(lider);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="h-[42px] px-4 flex items-center justify-center bg-muted/50 hover:bg-muted text-foreground rounded-lg transition-colors border border-border"
+                      title="Editar Líder"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
+
+        <EditPersonaModal
+          person={editingLider}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingLider(null);
+          }}
+          onSave={handleSaveLider}
+        />
       </div>
     </Layout>
   );
