@@ -11,7 +11,8 @@ import {
   Vote,
   Menu,
   X,
-  MessageSquare
+  MessageSquare,
+  Download
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,25 @@ export function Sidebar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   useEffect(() => {
     fetchUnreadCount();
@@ -131,6 +151,15 @@ export function Sidebar() {
             )}
           </Link>
         ))}
+        {deferredPrompt && (
+          <button
+            onClick={handleInstallClick}
+            className="sidebar-item w-full text-left bg-primary/10 text-primary hover:bg-primary/20 mt-4 md:hidden"
+          >
+            <Download className="w-5 h-5" />
+            <span className="font-bold">Instalar aplicación</span>
+          </button>
+        )}
       </nav>
 
       {/* Logout */}
