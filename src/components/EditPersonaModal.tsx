@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Persona } from "@/types/database";
+import { Persona, UserRole } from "@/types/database";
+import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Loader2 } from "lucide-react";
 
 interface EditPersonaModalProps {
     person: Persona | null;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (updatedPerson: Persona) => Promise<void>;
+    onSave: (updatedPerson: Persona, assignedAssociateIds?: string[]) => Promise<void>;
     lideres?: Persona[]; // List of leaders for selection (only if editing an associate)
 }
 
@@ -25,24 +28,68 @@ export function EditPersonaModal({
 }: EditPersonaModalProps) {
     const [formData, setFormData] = useState<Partial<Persona>>({});
     const [isSaving, setIsSaving] = useState(false);
+    const [allAssociates, setAllAssociates] = useState<Persona[]>([]);
+    const [selectedAssociateIds, setSelectedAssociateIds] = useState<string[]>([]);
+    const [loadingAssociates, setLoadingAssociates] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        if (person) {
+        if (person && isOpen) {
             setFormData({
                 ...person,
             });
+            if (person.rol === 'lider' || formData.rol === 'lider') {
+                fetchAssociates(person.cedula);
+            }
         }
     }, [person, isOpen]);
 
+    useEffect(() => {
+        if (formData.rol === 'lider' && person) {
+            fetchAssociates(person.cedula);
+        }
+    }, [formData.rol]);
+
+    const fetchAssociates = async (liderCedula: string) => {
+        setLoadingAssociates(true);
+        try {
+            const { data, error } = await supabase
+                .from('personas')
+                .select('*')
+                .eq('rol', 'asociado');
+
+            if (error) throw error;
+            setAllAssociates(data || []);
+
+            // Current associates of this leader
+            const currentSelected = (data || [])
+                .filter(a => a.cedula_lider === liderCedula)
+                .map(a => a.cedula);
+            setSelectedAssociateIds(currentSelected);
+        } catch (error) {
+            console.error("Error fetching associates:", error);
+        } finally {
+            setLoadingAssociates(false);
+        }
+    };
+
     const handleChange = (field: keyof Persona, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleToggleAssociate = (cedula: string) => {
+        setSelectedAssociateIds(prev =>
+            prev.includes(cedula)
+                ? prev.filter(id => id !== cedula)
+                : [...prev, cedula]
+        );
     };
 
     const handleSave = async () => {
         if (!person || !formData) return;
         setIsSaving(true);
         try {
-            await onSave(formData as Persona);
+            await onSave(formData as Persona, formData.rol === 'lider' ? selectedAssociateIds : undefined);
             onClose();
         } catch (error) {
             console.error("Error saving:", error);
@@ -53,23 +100,44 @@ export function EditPersonaModal({
 
     if (!person) return null;
 
-    const isAssociate = person.rol === 'asociado';
+    const filteredAssociates = allAssociates.filter(a =>
+        a.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.cedula.includes(searchTerm)
+    );
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Editar {isAssociate ? 'Asociado' : 'Líder'}</DialogTitle>
+                    <DialogTitle>Editar {formData.rol === 'asociado' ? 'Asociado' : 'Líder'}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="nombre_completo">Nombre Completo</Label>
-                        <Input
-                            id="nombre_completo"
-                            value={formData.nombre_completo || ""}
-                            onChange={(e) => handleChange("nombre_completo", e.target.value)}
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="nombre_completo">Nombre Completo</Label>
+                            <Input
+                                id="nombre_completo"
+                                value={formData.nombre_completo || ""}
+                                onChange={(e) => handleChange("nombre_completo", e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="rol">Rol</Label>
+                            <Select
+                                value={formData.rol || ""}
+                                onValueChange={(value) => handleChange("rol", value as UserRole)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar rol" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="asociado">Asociado</SelectItem>
+                                    <SelectItem value="lider">Líder</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
+
                     <div className="grid gap-2">
                         <Label htmlFor="cedula">Cédula (No editable)</Label>
                         <Input
@@ -79,14 +147,26 @@ export function EditPersonaModal({
                             className="bg-muted"
                         />
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="telefono">Teléfono</Label>
-                        <Input
-                            id="telefono"
-                            value={formData.telefono || ""}
-                            onChange={(e) => handleChange("telefono", e.target.value)}
-                        />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="telefono">Teléfono</Label>
+                            <Input
+                                id="telefono"
+                                value={formData.telefono || ""}
+                                onChange={(e) => handleChange("telefono", e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between pt-6 pr-2">
+                            <Label htmlFor="vota_en_bello">¿Vota en Bello?</Label>
+                            <Switch
+                                id="vota_en_bello"
+                                checked={formData.vota_en_bello || false}
+                                onCheckedChange={(checked) => handleChange("vota_en_bello", checked)}
+                            />
+                        </div>
                     </div>
+
                     <div className="grid gap-2">
                         <Label htmlFor="lugar_votacion">Lugar de Votación</Label>
                         <Input
@@ -95,8 +175,8 @@ export function EditPersonaModal({
                             onChange={(e) => handleChange("lugar_votacion", e.target.value)}
                         />
                     </div>
-                    {/* Only show leader selection if editing an associate */}
-                    {isAssociate && (
+
+                    {formData.rol === 'asociado' ? (
                         <div className="grid gap-2">
                             <Label htmlFor="cedula_lider">Líder Asignado</Label>
                             <Select
@@ -115,15 +195,52 @@ export function EditPersonaModal({
                                 </SelectContent>
                             </Select>
                         </div>
+                    ) : (
+                        <div className="grid gap-2 border-t pt-4 mt-2">
+                            <Label className="text-primary font-bold">Asignar Asociados a este Líder</Label>
+                            <div className="relative mb-2">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar asociados..."
+                                    className="pl-8"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+
+                            {loadingAssociates ? (
+                                <div className="flex justify-center p-4">
+                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                </div>
+                            ) : (
+                                <div className="grid gap-2 max-h-[200px] overflow-y-auto border rounded-md p-2 bg-muted/20">
+                                    {filteredAssociates.length === 0 ? (
+                                        <p className="text-xs text-center p-4 text-muted-foreground">No se encontraron asociados disponibles</p>
+                                    ) : (
+                                        filteredAssociates.map((associate) => (
+                                            <div key={associate.cedula} className="flex items-center space-x-2 p-1 hover:bg-background rounded transition-colors">
+                                                <Checkbox
+                                                    id={`assoc-${associate.cedula}`}
+                                                    checked={selectedAssociateIds.includes(associate.cedula)}
+                                                    onCheckedChange={() => handleToggleAssociate(associate.cedula)}
+                                                />
+                                                <label
+                                                    htmlFor={`assoc-${associate.cedula}`}
+                                                    className="text-sm font-medium leading-none cursor-pointer flex-1"
+                                                >
+                                                    {associate.nombre_completo}
+                                                    <span className="text-[10px] text-muted-foreground ml-2">CC: {associate.cedula}</span>
+                                                </label>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                                Selecciona los asociados que formarán parte del equipo de este líder.
+                            </p>
+                        </div>
                     )}
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="vota_en_bello">¿Vota en Bello?</Label>
-                        <Switch
-                            id="vota_en_bello"
-                            checked={formData.vota_en_bello || false}
-                            onCheckedChange={(checked) => handleChange("vota_en_bello", checked)}
-                        />
-                    </div>
 
                 </div>
                 <DialogFooter>

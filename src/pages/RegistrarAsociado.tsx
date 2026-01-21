@@ -120,27 +120,27 @@ export default function RegistrarAsociado() {
         </div>
 
         {/* Counter */}
-        <div className="glass-panel p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-primary" />
+        <div className="bg-card rounded-2xl p-6 mb-6 shadow-sm border border-border flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+              <UserPlus className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Asociados registrados</p>
-              <p className="text-lg font-bold font-display">
-                {countAsociados !== null ? `${countAsociados} / 4` : 'Cargando...'}
+              <p className="text-sm text-muted-foreground font-medium">Asociados registrados</p>
+              <p className="text-2xl font-bold font-display text-foreground">
+                {countAsociados !== null ? `${countAsociados} / 4` : '0 / 4'}
               </p>
             </div>
           </div>
           {countAsociados !== null && countAsociados >= 4 && (
-            <span className="px-3 py-1 bg-destructive/10 text-destructive rounded-full text-sm font-medium">
+            <span className="px-4 py-1.5 bg-destructive/10 text-destructive rounded-full text-xs font-bold uppercase tracking-wider">
               Límite alcanzado
             </span>
           )}
         </div>
 
         {/* Form */}
-        <div className="glass-panel p-8 max-w-xl">
+        <div className="bg-card rounded-2xl p-8 max-w-2xl shadow-sm border border-border">
           {countAsociados !== null && countAsociados >= 4 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">

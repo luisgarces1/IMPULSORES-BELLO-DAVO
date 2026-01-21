@@ -1,14 +1,13 @@
-
 import { useState, useRef, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import * as faceapi from 'face-api.js';
 import { supabase } from '@/integrations/supabase/client';
-import { loadModels, detectFace, matchFace } from '@/lib/face-util';
+import { loadModels, detectFace } from '@/lib/face-util';
 import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Loader2, ScanFace, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, ScanFace, CheckCircle2 } from 'lucide-react';
 
 export default function FaceLogin() {
     const [isOpen, setIsOpen] = useState(false);
@@ -40,97 +39,69 @@ export default function FaceLogin() {
             // 1. Detect face
             const detection = await detectFace(webcamRef.current.video);
             if (!detection) {
-                toast.error("No se detectó rostro. Inténtalo de nuevo.");
-                setStatus('idle');
+                toast.error("No se detectó rostro. Intenta de nuevo.");
+                setStatus('failed');
                 return;
             }
 
             // 2. Setup Matcher with DB data
-            // Fetch all active admins with descriptors
-            const { data: adminsData, error } = await supabase
+            const { data: admins, error } = await supabase
                 .from('admin_codes')
                 .select('*')
                 .eq('activo', true)
                 .not('descripcion', 'is', null);
 
-            const admins = adminsData as any[];
-
             if (error || !admins || admins.length === 0) {
-                console.error(error);
-                toast.error("No se encontraron administradores con datos faciales.");
+                toast.error("No se encontraron registros faciales configurados.");
                 setStatus('failed');
                 return;
             }
-
-            // Debugging: Notify how many records found to verify DB connection
-            console.log(`Face Login: Found ${admins.length} admins with descriptions.`);
 
             // 3. Compare
             let bestMatchAdmin = null;
             let bestDistance = 1.0;
 
             for (const admin of admins) {
-                // Parse descriptor from description field
-                let storedDescriptor = null;
                 try {
                     let desc = admin.descripcion;
-
-                    // Handle double stringification if it happens
-                    if (typeof desc === 'string') {
-                        if (desc.trim().startsWith('"') && desc.trim().endsWith('"')) {
-                            try {
-                                desc = JSON.parse(desc);
-                            } catch (e) { /* ignore */ }
-                        }
-                    }
+                    if (!desc) continue;
 
                     let parsed = null;
                     if (typeof desc === 'string') {
-                        if (desc.trim().startsWith('{') || desc.includes('face_descriptor')) {
-                            try {
-                                parsed = JSON.parse(desc);
-                            } catch (e) {
-                                console.error("JSON parse error for admin " + admin.codigo, e);
-                            }
-                        }
-                    } else if (typeof desc === 'object' && desc !== null) {
+                        // Handle potential double-stringified JSON from some environments
+                        let current: any = desc.trim();
+                        try {
+                            if (current.includes('\\"')) current = current.replace(/\\"/g, '"');
+                            current = JSON.parse(current);
+                            if (typeof current === 'string') current = JSON.parse(current);
+                        } catch (e) { /* ignore */ }
+                        parsed = current;
+                    } else {
                         parsed = desc;
                     }
 
-                    if (parsed && parsed.face_descriptor) {
-                        // Convert regular array back to Float32Array
-                        const arr = Object.values(parsed.face_descriptor) as number[];
-                        storedDescriptor = new Float32Array(arr);
-                    } else {
-                        console.log(`Admin ${admin.codigo} has description but no face_descriptor key.`);
-                    }
+                    if (parsed && typeof parsed === 'object' && parsed.face_descriptor) {
+                        const vals = Object.values(parsed.face_descriptor) as number[];
+                        const storedDescriptor = new Float32Array(vals);
 
+                        const distance = faceapi.euclideanDistance(detection.descriptor, storedDescriptor);
+
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                        }
+
+                        if (distance < 0.6) { // Stricter threshold for manual button
+                            bestMatchAdmin = admin;
+                        }
+                    }
                 } catch (e) {
-                    console.error('Error processing face descriptor:', e);
-                }
-
-                if (storedDescriptor) {
-                    const distance = faceapi.euclideanDistance(detection.descriptor, storedDescriptor);
-                    // Debug login
-                    console.log(`Comparing with admin ${admin.codigo || 'unknown'}: distance ${distance}`);
-
-                    // Always track the best distance found
-                    if (distance < bestDistance) {
-                        bestDistance = distance;
-                    }
-
-                    // Relaxed threshold to 0.7 as requested
-                    if (distance < 0.7) {
-                        bestMatchAdmin = admin;
-                    }
+                    console.error("Error procesando admin:", admin.codigo, e);
                 }
             }
 
             if (bestMatchAdmin) {
                 setStatus('success');
-                // formatted distance for debug
-                const matchScore = bestDistance < 1 ? bestDistance.toFixed(3) : "1.0";
-                toast.success(`¡Hola ${bestMatchAdmin.nombre || 'Administrador'}! (Score: ${matchScore})`);
+                toast.success(`¡Bienvenido! Acceso concedido.`);
 
                 setTimeout(() => {
                     login('admin', 'Administrador', 'admin', true);
@@ -138,12 +109,12 @@ export default function FaceLogin() {
                 }, 1000);
             } else {
                 setStatus('failed');
-                toast.error(`Rostro no reconocido. Mejor coincidencia: ${bestDistance.toFixed(2)}`);
+                toast.error(`Rostro no reconocido (Distancia: ${bestDistance.toFixed(2)})`);
             }
 
         } catch (e) {
             console.error(e);
-            toast.error("Error en el proceso de reconocimiento.");
+            toast.error('Error durante el escaneo facial.');
             setStatus('failed');
         }
     };
@@ -209,7 +180,12 @@ export default function FaceLogin() {
                             disabled={status === 'scanning' || status === 'success' || !modelsLoaded}
                             className="btn-primary flex-1"
                         >
-                            {status === 'scanning' ? "Analizando..." : "Escanear Rostro"}
+                            {status === 'scanning' ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    Analizando...
+                                </>
+                            ) : "Escanear Rostro"}
                         </button>
                     </div>
                 </div>

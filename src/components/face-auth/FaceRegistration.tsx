@@ -15,6 +15,7 @@ export default function FaceRegistration() {
     const [loading, setLoading] = useState(false);
     const [modelsLoaded, setModelsLoaded] = useState(false);
     const webcamRef = useRef<Webcam>(null);
+    const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
     const [streamActive, setStreamActive] = useState(false);
 
     const startCamera = async () => {
@@ -34,62 +35,88 @@ export default function FaceRegistration() {
         setLoading(true);
 
         try {
+            const cleanCode = adminCode.trim();
+            console.log("Verificando código:", cleanCode);
+
             const { data, error } = await supabase
                 .from('admin_codes')
                 .select('*')
-                .eq('codigo', adminCode)
+                .ilike('codigo', cleanCode)
                 .single();
 
             if (error || !data) {
-                toast.error("Código inválido");
+                console.error("Error verificando código:", error);
+                toast.error("Código no encontrado");
                 setLoading(false);
                 return;
             }
 
+            console.log("Admin encontrado:", data);
+            setSelectedAdmin(data);
+            setAdminCode(data.codigo);
             await startCamera();
         } catch (e) {
+            console.error("Excepción en handleAuth:", e);
             toast.error("Error de conexión");
             setLoading(false);
         }
     };
 
     const captureAndSave = async () => {
-        if (!webcamRef.current || !webcamRef.current.video) return;
+        if (!webcamRef.current || !webcamRef.current.video || !selectedAdmin) {
+            console.error("Faltan datos para guardar:", { webcam: !!webcamRef.current, admin: !!selectedAdmin });
+            return;
+        }
 
         setLoading(true);
         try {
             const detection = await detectFace(webcamRef.current.video);
 
             if (!detection) {
-                toast.error("No se detectó ningún rostro. Intenta ajustar la iluminación o posición.");
+                toast.error("No se detectó ningún rostro.");
                 setLoading(false);
                 return;
             }
 
-            // Convert Float32Array to regular array for JSON storage
             const descriptorArray = Array.from(detection.descriptor);
-
-            // Update the admin code entry with the face descriptor stored in 'descripcion'
-            // We use a delimiter or just stringify the whole object if we don't care about the old description
             const faceData = JSON.stringify({ face_descriptor: descriptorArray });
 
-            const { error } = await supabase
-                .from('admin_codes')
-                .update({ descripcion: faceData } as any)
-                .eq('codigo', adminCode);
+            console.log("Intentando actualizar admin ID:", selectedAdmin.id || selectedAdmin.codigo);
+
+            // Intentamos actualizar por ID si existe, si no por código
+            let query = supabase.from('admin_codes').update({
+                descripcion: faceData,
+                activo: true
+            } as any);
+
+            if (selectedAdmin.id) {
+                query = query.eq('id', selectedAdmin.id);
+            } else {
+                query = query.eq('codigo', selectedAdmin.codigo);
+            }
+
+            const { data, error } = await query.select();
 
             if (error) {
-                console.error(error);
-                toast.error(`Error de base de datos: ${error.message || error.details || 'Desconocido'}`);
+                console.error("Error en update Supabase:", error);
+                toast.error(`Error de Base de Datos: ${error.message}`);
+            } else if (!data || data.length === 0) {
+                // Si llegamos aquí, es 99% seguro que es RLS
+                console.error("Fallo de RLS detectado o registro no encontrado");
+                toast.error("ERROR DE PERMISOS: No se pudo actualizar el registro. Verifica las políticas RLS.");
+
+                // Mostramos un alert con instrucciones técnicas
+                alert("INSTRUCCIONES PARA EL ADMINISTRADOR:\n1. Ve a tu proyecto de Supabase.\n2. Ve a Table Editor -> admin_codes.\n3. Haz clic en 'RLS Disabled' (o añade una Policy que permita UPDATE para el rol anon/authenticated).\n4. Guarda los cambios e intenta registrarte de nuevo.");
             } else {
-                toast.success("¡Rostro registrado exitosamente!");
+                toast.success("¡Rostro registrado y activado!");
                 setIsOpen(false);
                 setStep('auth');
                 setAdminCode('');
+                setSelectedAdmin(null);
             }
         } catch (e) {
-            console.error(e);
-            toast.error("Error inesperado al procesar el rostro.");
+            console.error("Excepción en captureAndSave:", e);
+            toast.error("Error al procesar el rostro.");
         } finally {
             setLoading(false);
         }
@@ -99,6 +126,7 @@ export default function FaceRegistration() {
         setIsOpen(false);
         setStep('auth');
         setAdminCode('');
+        setSelectedAdmin(null);
         setStreamActive(false);
     };
 
@@ -128,7 +156,6 @@ export default function FaceRegistration() {
                                     value={adminCode}
                                     onChange={(e) => setAdminCode(e.target.value)}
                                     className="input-field w-full"
-                                    placeholder="ADMIN2024"
                                 />
                             </div>
                             <button

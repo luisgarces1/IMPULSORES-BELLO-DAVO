@@ -4,7 +4,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona, EstadoRegistro, LiderWithStats } from '@/types/database';
 import { EditPersonaModal } from '@/components/EditPersonaModal';
-import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil } from 'lucide-react';
+import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Lideres() {
@@ -78,8 +78,9 @@ export default function Lideres() {
     }
   };
 
-  const handleSaveLider = async (updatedLider: Persona) => {
+  const handleSaveLider = async (updatedLider: Persona, assignedAssociateIds?: string[]) => {
     try {
+      // 1. Update the persona itself
       const { error } = await supabase
         .from('personas')
         .update({
@@ -87,24 +88,53 @@ export default function Lideres() {
           telefono: updatedLider.telefono,
           lugar_votacion: updatedLider.lugar_votacion,
           vota_en_bello: updatedLider.vota_en_bello,
+          rol: updatedLider.rol,
+          // If downgrading to associate, they need a leader or null
+          cedula_lider: updatedLider.rol === 'asociado' ? updatedLider.cedula_lider : null,
         })
         .eq('cedula', updatedLider.cedula);
 
       if (error) throw error;
 
-      setLideres((prev) =>
-        prev.map((p) =>
-          p.cedula === updatedLider.cedula
-            ? { ...p, ...updatedLider }
-            : p
-        )
+      // 2. Handle team assignments/removals
+      if (updatedLider.rol === 'lider' && assignedAssociateIds) {
+        // Set new team
+        await supabase
+          .from('personas')
+          .update({ cedula_lider: updatedLider.cedula })
+          .in('cedula', assignedAssociateIds);
+
+        // Remove those no longer in team
+        if (assignedAssociateIds.length > 0) {
+          await supabase
+            .from('personas')
+            .update({ cedula_lider: null })
+            .eq('cedula_lider', updatedLider.cedula)
+            .not('cedula', 'in', assignedAssociateIds);
+        } else {
+          await supabase
+            .from('personas')
+            .update({ cedula_lider: null })
+            .eq('cedula_lider', updatedLider.cedula);
+        }
+      } else if (updatedLider.rol === 'asociado') {
+        // If downgraded, their former team is orphaned
+        await supabase
+          .from('personas')
+          .update({ cedula_lider: null })
+          .eq('cedula_lider', updatedLider.cedula);
+      }
+
+      toast.success(updatedLider.rol === 'asociado'
+        ? 'Líder cambiado a Asociado'
+        : 'Líder actualizado correctamente'
       );
 
-      toast.success('Líder actualizado correctamente');
       setIsEditModalOpen(false);
+      fetchLideres();
     } catch (error) {
       console.error('Error updating lider:', error);
-      toast.error('Error al actualizar el líder');
+      toast.error('Error al actualizar el registro');
     }
   };
 
@@ -144,7 +174,7 @@ export default function Lideres() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <div className="bg-card rounded-xl p-4 border border-border shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -178,6 +208,19 @@ export default function Lideres() {
                 <p className="text-xs text-muted-foreground font-medium">Aprobados</p>
                 <p className="text-xl font-bold font-display">
                   {lideres.filter((l) => l.estado === 'APROBADO').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-4 border border-border shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-destructive/10">
+                <XCircle className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Rechazados</p>
+                <p className="text-xl font-bold font-display">
+                  {lideres.filter((l) => l.estado === 'RECHAZADO').length}
                 </p>
               </div>
             </div>

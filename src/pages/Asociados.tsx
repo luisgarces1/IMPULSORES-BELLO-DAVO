@@ -85,8 +85,9 @@ export default function Asociados() {
     }
   };
 
-  const handleSaveAsociado = async (updatedAsociado: Persona) => {
+  const handleSaveAsociado = async (updatedAsociado: Persona, assignedAssociateIds?: string[]) => {
     try {
+      // 1. Update the persona itself
       const { error } = await supabase
         .from('personas')
         .update({
@@ -94,35 +95,51 @@ export default function Asociados() {
           telefono: updatedAsociado.telefono,
           lugar_votacion: updatedAsociado.lugar_votacion,
           vota_en_bello: updatedAsociado.vota_en_bello,
-          cedula_lider: updatedAsociado.cedula_lider,
+          cedula_lider: updatedAsociado.rol === 'lider' ? null : updatedAsociado.cedula_lider,
+          rol: updatedAsociado.rol,
         })
         .eq('cedula', updatedAsociado.cedula);
 
       if (error) throw error;
 
-      // Update local state is a bit tricky for 'lider' object relation.
-      // We will optimistic update the fields but for 'lider' name update we might need to look it up or just fetch again.
-      // For now, let's update what we can. If cedula_lider changed, we might want to update the displayed leader name.
+      // 2. If it's a leader now, handle associated assignments
+      if (updatedAsociado.rol === 'lider' && assignedAssociateIds) {
+        // Reset current associations of this person (just in case they were already a leader)
+        // For associate-to-leader case, this is just assigning new ones.
 
-      const newLiderName = lideres.find(l => l.cedula === updatedAsociado.cedula_lider)?.nombre_completo;
+        // Block update: set cedula_lider of all selected associates
+        await supabase
+          .from('personas')
+          .update({ cedula_lider: updatedAsociado.cedula })
+          .in('cedula', assignedAssociateIds);
 
-      setAsociados((prev) =>
-        prev.map((p) =>
-          p.cedula === updatedAsociado.cedula
-            ? {
-              ...p,
-              ...updatedAsociado,
-              lider: newLiderName ? { nombre_completo: newLiderName } : p.lider
-            }
-            : p
-        )
+        // Any associate that was under this leader but not in the list should be unassigned
+        // (Only if they were already a leader, but for simplicity we do it)
+        if (assignedAssociateIds.length > 0) {
+          await supabase
+            .from('personas')
+            .update({ cedula_lider: null })
+            .eq('cedula_lider', updatedAsociado.cedula)
+            .not('cedula', 'in', assignedAssociateIds);
+        } else {
+          await supabase
+            .from('personas')
+            .update({ cedula_lider: null })
+            .eq('cedula_lider', updatedAsociado.cedula);
+        }
+      }
+
+      toast.success(updatedAsociado.rol === 'lider'
+        ? '¡Promovido a Líder y equipo asignado!'
+        : 'Asociado actualizado correctamente'
       );
 
-      toast.success('Asociado actualizado correctamente');
       setIsEditModalOpen(false);
+      fetchAsociados(); // Refresh all to reflect role changes
+      if (isAdmin) fetchLideres();
     } catch (error) {
       console.error('Error updating asociado:', error);
-      toast.error('Error al actualizar el asociado');
+      toast.error('Error al actualizar el registro');
     }
   };
 

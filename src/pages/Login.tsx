@@ -43,7 +43,7 @@ export default function Login() {
 
       login(persona.cedula, persona.nombre_completo, 'lider', false);
       toast.success(`¡Bienvenido, ${persona.nombre_completo}!`);
-      navigate('/dashboard');
+      navigate('/registrar-asociado');
     } catch {
       setError('Error al iniciar sesión');
     } finally {

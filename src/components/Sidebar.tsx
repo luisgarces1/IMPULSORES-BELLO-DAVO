@@ -23,11 +23,11 @@ export function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
-    { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
-    { path: '/asociados', icon: ClipboardList, label: 'Asociados', show: true },
-    { path: '/registrar-lider', icon: UserPlus, label: 'Registrar Líder', show: isAdmin },
     { path: '/registrar-asociado', icon: UserPlus, label: 'Registrar Asociado', show: !isAdmin },
+    { path: '/asociados', icon: ClipboardList, label: 'Asociados', show: true },
+    { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
+    { path: '/registrar-lider', icon: UserPlus, label: 'Registrar Líder', show: isAdmin },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
   ];
 
   const SidebarContent = () => (

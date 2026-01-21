@@ -47,6 +47,10 @@ INSERT INTO public.admin_codes (codigo, descripcion) VALUES ('ADMIN2024', 'Códi
 ALTER TABLE public.personas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sesiones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_codes ENABLE ROW LEVEL SECURITY;
+-- Esto le da permiso a la aplicación para guardar los rostros
+CREATE POLICY "Permitir actualización de códigos admin" ON public.admin_codes
+    FOR UPDATE USING (true) WITH CHECK (true);
+
 
 -- Políticas RLS para personas (lectura pública para el sistema de login con cédula)
 CREATE POLICY "Permitir lectura pública de personas" ON public.personas
