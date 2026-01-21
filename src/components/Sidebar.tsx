@@ -152,8 +152,15 @@ export function Sidebar() {
       <div className="md:hidden fixed top-4 right-4 z-50">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="bg-card shadow-md">
-              <Menu className="h-5 w-5" />
+            <Button
+              variant="outline"
+              size="icon"
+              className={`bg-card shadow-md transition-all duration-300 ${unreadCount > 0 ? 'bg-destructive/10 border-destructive text-destructive animate-pulse' : ''}`}
+            >
+              <Menu className={`h-5 w-5 ${unreadCount > 0 ? 'animate-bounce' : ''}`} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-background shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-64 border-none">
