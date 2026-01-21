@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard,
   Users,
@@ -9,7 +10,8 @@ import {
   Shield,
   Vote,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,48 @@ export function Sidebar() {
   const { nombre, isAdmin, logout, cedula } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetchUnreadCount();
+
+    const channel = (supabase as any)
+      .channel('unread_chat_notifications')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'chat_messages'
+      }, () => {
+        fetchUnreadCount();
+      })
+      .subscribe();
+
+    return () => {
+      (supabase as any).removeChannel(channel);
+    };
+  }, [cedula, isAdmin]); // Remove location.pathname from here to rely on realtime and manual refresh
+
+  const fetchUnreadCount = async () => {
+    const myId = isAdmin ? 'admin' : cedula;
+    if (!myId) return;
+
+    try {
+      const { count } = await (supabase as any)
+        .from('chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', myId)
+        .eq('is_read', false);
+
+      setUnreadCount(count || 0);
+    } catch (err) {
+      console.error('Error fetching unread:', err);
+    }
+  };
+
+  // Force refresh when route changes to /chat
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [location.pathname]);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -28,6 +72,7 @@ export function Sidebar() {
     { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
     { path: '/registrar-lider', icon: UserPlus, label: 'Registrar Líder', show: isAdmin },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
+    { path: '/chat', icon: MessageSquare, label: 'Chat', show: true },
   ];
 
   const SidebarContent = () => (
@@ -79,8 +124,11 @@ export function Sidebar() {
             onClick={() => setOpen(false)}
             className={`sidebar-item ${isActive(item.path) ? 'active' : ''}`}
           >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
+            <item.icon className="w-5 h-5 shrink-0" />
+            <span className="flex-1">{item.label}</span>
+            {item.path === '/chat' && unreadCount > 0 && (
+              <span className="w-2.5 h-2.5 bg-destructive rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse" />
+            )}
           </Link>
         ))}
       </nav>

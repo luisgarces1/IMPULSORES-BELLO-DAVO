@@ -43,3 +43,13 @@ export interface DashboardStats {
     rechazados: number;
   };
 }
+
+export interface ChatMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  created_at: string;
+  is_read: boolean;
+  sender_nombre?: string;
+}

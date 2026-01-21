@@ -11,6 +11,7 @@ import Lideres from "./pages/Lideres";
 import Asociados from "./pages/Asociados";
 import RegistrarLider from "./pages/RegistrarLider";
 import RegistrarAsociado from "./pages/RegistrarAsociado";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/asociados" element={<ProtectedRoute><Asociados /></ProtectedRoute>} />
           <Route path="/registrar-lider" element={<AdminRoute><RegistrarLider /></AdminRoute>} />
           <Route path="/registrar-asociado" element={<ProtectedRoute><RegistrarAsociado /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

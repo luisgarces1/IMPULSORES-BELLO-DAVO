@@ -4,10 +4,12 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona, EstadoRegistro, LiderWithStats } from '@/types/database';
 import { EditPersonaModal } from '@/components/EditPersonaModal';
-import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil, XCircle } from 'lucide-react';
+import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil, XCircle, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export default function Lideres() {
+  const navigate = useNavigate();
   const [lideres, setLideres] = useState<LiderWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -354,6 +356,15 @@ export default function Lideres() {
                       title="Editar Líder"
                     >
                       <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate(`/chat?lider=${lider.cedula}&nombre=${encodeURIComponent(lider.nombre_completo)}`);
+                      }}
+                      className="h-[42px] px-4 flex items-center justify-center bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors border border-primary/20"
+                      title="Chatear con Líder"
+                    >
+                      <MessageSquare className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
