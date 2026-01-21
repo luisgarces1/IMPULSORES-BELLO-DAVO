@@ -4,7 +4,7 @@ import { Layout } from '@/components/Layout';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage } from '@/types/database';
-import { Send, Loader2, MessageSquare } from 'lucide-react';
+import { Send, Loader2, MessageSquare, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Chat() {
@@ -218,9 +218,9 @@ export default function Chat() {
                     </p>
                 </div>
 
-                <div className="flex-1 flex gap-6 overflow-hidden">
+                <div className="flex-1 flex gap-6 overflow-hidden relative">
                     {isAdmin && (
-                        <div className="w-64 bg-card rounded-2xl border border-border overflow-y-auto hidden md:block">
+                        <div className={`w-full md:w-64 bg-card rounded-2xl border border-border overflow-y-auto ${selectedLeader ? 'hidden md:block' : 'block'}`}>
                             <div className="p-4 border-b border-border font-bold text-sm">Conversaciones</div>
                             {activeConversations.length === 0 ? (
                                 <div className="p-8 text-center text-xs text-muted-foreground">No hay chats activos</div>
@@ -251,7 +251,7 @@ export default function Chat() {
                         </div>
                     )}
 
-                    <div className="flex-1 flex flex-col bg-card rounded-2xl border border-border shadow-sm overflow-hidden relative">
+                    <div className={`flex-1 flex flex-col bg-card rounded-2xl border border-border shadow-sm overflow-hidden relative ${!selectedLeader && isAdmin ? 'hidden md:flex' : 'flex'}`}>
                         {!selectedLeader && isAdmin ? (
                             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 animate-fade-in">
                                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -264,6 +264,14 @@ export default function Chat() {
                             <>
                                 <div className="p-4 border-b border-border bg-muted/30 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => setSelectedLeader(null)}
+                                                className="p-2 -ml-2 hover:bg-muted rounded-full md:hidden"
+                                            >
+                                                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+                                            </button>
+                                        )}
                                         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                                             {selectedLeader?.nombre.charAt(0)}
                                         </div>
