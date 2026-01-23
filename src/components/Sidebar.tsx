@@ -107,7 +107,7 @@ export function Sidebar() {
             <h1 className="font-display font-bold text-sidebar-foreground text-lg">
               CRM Electoral
             </h1>
-            <p className="text-xs text-sidebar-foreground/60">Bello 2026</p>
+
           </div>
         </div>
       </div>
