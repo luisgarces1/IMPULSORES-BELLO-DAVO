@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { supabase } from '@/integrations/supabase/client';
 import { UserPlus, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { LUGARES_VOTACION } from '@/constants/locations';
+import { LUGARES_VOTACION, MUNICIPIOS_ANTIOQUIA } from '@/constants/locations';
 import { SearchableSelect } from '@/components/SearchableSelect';
 
 
@@ -16,7 +16,8 @@ export default function RegistrarLider() {
     cedula: '',
     nombre: '',
     telefono: '',
-    lugarVotacion: '',
+    email: '',
+    lugarVotacion: 'Antioquia',
     municipio: 'Bello',
   });
 
@@ -56,6 +57,7 @@ export default function RegistrarLider() {
         cedula: formData.cedula.trim(),
         nombre_completo: formData.nombre.trim(),
         telefono: formData.telefono.trim() || null,
+        email: formData.email.trim() || null,
         rol: 'lider',
         cedula_lider: formData.cedula.trim(),
         lugar_votacion: formData.lugarVotacion,
@@ -75,7 +77,8 @@ export default function RegistrarLider() {
         cedula: '',
         nombre: '',
         telefono: '',
-        lugarVotacion: '',
+        email: '',
+        lugarVotacion: 'Antioquia',
         municipio: 'Bello',
       });
     } catch {
@@ -147,7 +150,7 @@ export default function RegistrarLider() {
 
             <div>
               <label htmlFor="telefono" className="block text-sm font-medium mb-2">
-                Teléfono
+                WhatsApp
               </label>
               <input
                 id="telefono"
@@ -161,14 +164,17 @@ export default function RegistrarLider() {
             </div>
 
             <div>
-              <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
-                Lugar de Votación <span className="text-destructive">*</span>
+              <label htmlFor="email" className="block text-sm font-medium mb-2">
+                Correo Electrónico
               </label>
-              <SearchableSelect
-                options={LUGARES_VOTACION}
-                value={formData.lugarVotacion}
-                onChange={(value) => setFormData({ ...formData, lugarVotacion: value })}
-                placeholder="Selecciona un lugar..."
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Ej: juan@ejemplo.com"
+                className="input-field"
               />
             </div>
 
@@ -184,8 +190,26 @@ export default function RegistrarLider() {
                 className="input-field"
                 required
               >
-                <option value="Bello">Bello</option>
-                <option value="Otro">Otro municipio</option>
+                {MUNICIPIOS_ANTIOQUIA.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
+                Departamento donde vota <span className="text-destructive">*</span>
+              </label>
+              <select
+                id="lugarVotacion"
+                name="lugarVotacion"
+                value={formData.lugarVotacion}
+                onChange={handleChange}
+                className="input-field"
+                required
+              >
+                <option value="Antioquia">Antioquia</option>
+                <option value="Otro departamento">Otro departamento</option>
               </select>
             </div>
 

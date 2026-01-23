@@ -44,8 +44,8 @@ export default function Lideres() {
         return {
           ...lider,
           total_asociados: misAsociados.length,
-          votan_bello: misAsociados.filter((a) => a.vota_en_bello).length,
-          no_votan_bello: misAsociados.filter((a) => !a.vota_en_bello).length,
+          votan_antioquia: misAsociados.filter((a) => a.lugar_votacion === 'Antioquia').length,
+          no_votan_antioquia: misAsociados.filter((a) => a.lugar_votacion !== 'Antioquia').length,
         };
       });
 
@@ -88,9 +88,12 @@ export default function Lideres() {
         .update({
           nombre_completo: updatedLider.nombre_completo,
           telefono: updatedLider.telefono,
+          email: updatedLider.email,
           lugar_votacion: updatedLider.lugar_votacion,
+          municipio_votacion: updatedLider.municipio_votacion,
           vota_en_bello: updatedLider.vota_en_bello,
           rol: updatedLider.rol,
+          estado: updatedLider.estado,
           // If downgrading to associate, they need a leader or null
           cedula_lider: updatedLider.rol === 'asociado' ? updatedLider.cedula_lider : null,
         })
@@ -296,16 +299,28 @@ export default function Lideres() {
                   {lider.telefono && (
                     <div className="flex items-center gap-3 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg">
                       <div className="p-1.5 bg-background rounded-md shadow-sm">
-                        <Phone className="w-3.5 h-3.5" />
+                        <MessageSquare className="w-3.5 h-3.5" />
                       </div>
-                      <span className="font-medium">{lider.telefono}</span>
+                      <a
+                        href={`https://wa.me/${lider.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent('Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium hover:text-primary transition-colors underline decoration-primary/30 underline-offset-4"
+                      >
+                        {lider.telefono}
+                      </a>
                     </div>
                   )}
-                  <div className="flex items-start gap-3 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg">
-                    <div className="p-1.5 bg-background rounded-md shadow-sm shrink-0">
-                      <MapPin className="w-3.5 h-3.5" />
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 bg-background rounded-md shadow-sm shrink-0">
+                        <MapPin className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="leading-tight font-medium">{lider.municipio_votacion || 'Sin municipio'}</span>
                     </div>
-                    <span className="leading-tight">{lider.lugar_votacion || 'Sin asignar'}</span>
+                    <div className="pl-9 text-xs opacity-70">
+                      {lider.lugar_votacion || 'Sin departamento'}
+                    </div>
                   </div>
                 </div>
 
@@ -315,15 +330,15 @@ export default function Lideres() {
                     <p className="text-lg font-bold font-display text-primary">{lider.total_asociados}</p>
                   </div>
                   <div className="text-center border-x border-primary/10">
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Bello</p>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Antioq</p>
                     <p className="text-lg font-bold font-display text-success">
-                      {lider.votan_bello}
+                      {lider.votan_antioquia}
                     </p>
                   </div>
                   <div className="text-center">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Otros</p>
                     <p className="text-lg font-bold font-display text-warning">
-                      {lider.no_votan_bello}
+                      {lider.no_votan_antioquia}
                     </p>
                   </div>
                 </div>

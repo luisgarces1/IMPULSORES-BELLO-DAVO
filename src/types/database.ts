@@ -6,6 +6,7 @@ export interface Persona {
   cedula: string;
   nombre_completo: string;
   telefono: string | null;
+  email?: string | null;
   rol: UserRole;
   cedula_lider: string | null;
   lider?: {
@@ -23,15 +24,15 @@ export interface Persona {
 
 export interface LiderWithStats extends Persona {
   total_asociados: number;
-  votan_bello: number;
-  no_votan_bello: number;
+  votan_antioquia: number;
+  no_votan_antioquia: number;
 }
 
 export interface DashboardStats {
   totalLideres: number;
   totalAsociados: number;
-  votanEnBello: number;
-  noVotanBello: number;
+  votanEnAntioquia: number;
+  noVotanAntioquia: number;
   lideres: {
     pendientes: number;
     aprobados: number;

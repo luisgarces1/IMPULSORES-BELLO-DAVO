@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { LUGARES_VOTACION } from '@/constants/locations';
+import { LUGARES_VOTACION, MUNICIPIOS_ANTIOQUIA } from '@/constants/locations';
 import { SearchableSelect } from '@/components/SearchableSelect';
-
-
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -17,8 +15,47 @@ export default function Registro() {
     cedula: '',
     nombre: '',
     telefono: '',
-    lugarVotacion: '',
+    email: '',
+    lugarVotacion: 'Antioquia',
     municipio: 'Bello',
+  });
+  const [liderId, setLiderId] = useState<string | null>(null);
+  const [liderNombre, setLiderNombre] = useState<string | null>(null);
+
+  useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const identifier = params.get('lider');
+
+    if (identifier) {
+      const fetchLider = async (val: string) => {
+        // Try to find by name first (as requested)
+        const { data: byName } = await supabase
+          .from('personas')
+          .select('cedula, nombre_completo')
+          .eq('nombre_completo', val)
+          .eq('rol', 'lider')
+          .maybeSingle();
+
+        if (byName) {
+          setLiderId(byName.cedula);
+          setLiderNombre(byName.nombre_completo);
+        } else {
+          // Fallback: try to find by ID just in case old links are still out there
+          const { data: byId } = await supabase
+            .from('personas')
+            .select('cedula, nombre_completo')
+            .eq('cedula', val)
+            .eq('rol', 'lider')
+            .maybeSingle();
+
+          if (byId) {
+            setLiderId(byId.cedula);
+            setLiderNombre(byId.nombre_completo);
+          }
+        }
+      };
+      fetchLider(identifier);
+    }
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -51,26 +88,31 @@ export default function Registro() {
         return;
       }
 
-      // Insert new leader
+      // Insert new person
+      const isAsociado = !!liderId;
       const { error: insertError } = await supabase.from('personas').insert({
         cedula: formData.cedula.trim(),
         nombre_completo: formData.nombre.trim(),
         telefono: formData.telefono.trim() || null,
-        rol: 'lider',
-        cedula_lider: formData.cedula.trim(), // Leader references themselves
+        email: formData.email.trim() || null,
+        rol: isAsociado ? 'asociado' : 'lider',
+        cedula_lider: isAsociado ? liderId : formData.cedula.trim(),
         lugar_votacion: formData.lugarVotacion,
         municipio_votacion: formData.municipio,
         vota_en_bello: formData.municipio === 'Bello',
         estado: 'PENDIENTE',
-        registrado_por: formData.cedula.trim(),
+        registrado_por: isAsociado ? liderId : formData.cedula.trim(),
       });
 
       if (insertError) throw insertError;
 
       setSuccess(true);
-      toast.success('¡Registro exitoso! Ahora puedes iniciar sesión.');
-    } catch {
-      setError('Error al registrar. Por favor intenta de nuevo.');
+      if (!liderId) {
+        toast.success('¡Registro exitoso! Ahora puedes iniciar sesión.');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Error al registrar. Por favor intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -85,15 +127,37 @@ export default function Registro() {
           </div>
           <h1 className="text-2xl font-display font-bold mb-2">¡Registro Exitoso!</h1>
           <p className="text-muted-foreground mb-8">
-            Tu solicitud ha sido enviada. Un administrador revisará tu registro.
+            {liderId
+              ? `Te has registrado correctamente en el equipo de ${liderNombre || 'tu líder'}.`
+              : 'Tu solicitud ha sido enviada. Un administrador revisará tu registro.'}
           </p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-primary"
-          >
-            Ir a Iniciar Sesión
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {liderId ? (
+            <button
+              onClick={() => {
+                setSuccess(false);
+                setFormData({
+                  cedula: '',
+                  nombre: '',
+                  telefono: '',
+                  email: '',
+                  lugarVotacion: 'Antioquia',
+                  municipio: 'Bello',
+                });
+              }}
+              className="btn-primary"
+            >
+              Inscribir más asociados
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/')}
+              className="btn-primary"
+            >
+              Ir a Iniciar Sesión
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -116,7 +180,9 @@ export default function Registro() {
             </div>
             <div>
               <h1 className="font-display font-bold">CRM Electoral</h1>
-              <p className="text-xs text-muted-foreground">Registro de Líder</p>
+              <p className="text-xs text-muted-foreground">
+                {liderId ? 'Registro de Asociado' : 'Registro de Líder'}
+              </p>
             </div>
           </div>
         </div>
@@ -125,10 +191,13 @@ export default function Registro() {
       {/* Form */}
       <main className="max-w-xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="mb-8">
-          <h2 className="text-xl md:text-2xl font-display font-bold mb-2">Registrarse como Líder</h2>
+          <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
+            {liderId ? 'Registrarse como Asociado' : 'Registrarse como Líder'}
+          </h2>
           <p className="text-sm md:text-base text-muted-foreground">
-            Completa el formulario para registrarte como líder electoral.
-            Tu solicitud será revisada por un administrador.
+            {liderId
+              ? `Completa el formulario para unirte al equipo de ${liderNombre || 'tu líder'}.`
+              : 'Completa el formulario para registrarte como líder electoral. Tu solicitud será revisada por un administrador.'}
           </p>
         </div>
 
@@ -167,7 +236,7 @@ export default function Registro() {
 
           <div>
             <label htmlFor="telefono" className="block text-sm font-medium mb-2">
-              Teléfono
+              WhatsApp
             </label>
             <input
               id="telefono"
@@ -181,14 +250,17 @@ export default function Registro() {
           </div>
 
           <div>
-            <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
-              Lugar de Votación <span className="text-destructive">*</span>
+            <label htmlFor="email" className="block text-sm font-medium mb-2">
+              Correo Electrónico
             </label>
-            <SearchableSelect
-              options={LUGARES_VOTACION}
-              value={formData.lugarVotacion}
-              onChange={(value) => setFormData({ ...formData, lugarVotacion: value })}
-              placeholder="Selecciona un lugar..."
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Ej: juan@ejemplo.com"
+              className="input-field"
             />
           </div>
 
@@ -204,8 +276,26 @@ export default function Registro() {
               className="input-field"
               required
             >
-              <option value="Bello">Bello</option>
-              <option value="Otro">Otro municipio</option>
+              {MUNICIPIOS_ANTIOQUIA.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
+              Departamento donde vota <span className="text-destructive">*</span>
+            </label>
+            <select
+              id="lugarVotacion"
+              name="lugarVotacion"
+              value={formData.lugarVotacion}
+              onChange={handleChange}
+              className="input-field"
+              required
+            >
+              <option value="Antioquia">Antioquia</option>
+              <option value="Otro departamento">Otro departamento</option>
             </select>
           </div>
 

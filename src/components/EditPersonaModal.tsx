@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Persona, UserRole } from "@/types/database";
+import { Persona, UserRole, EstadoRegistro } from "@/types/database";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { MUNICIPIOS_ANTIOQUIA } from "@/constants/locations";
 
 interface EditPersonaModalProps {
     person: Persona | null;
@@ -78,11 +80,17 @@ export function EditPersonaModal({
     };
 
     const handleToggleAssociate = (cedula: string) => {
-        setSelectedAssociateIds(prev =>
-            prev.includes(cedula)
-                ? prev.filter(id => id !== cedula)
-                : [...prev, cedula]
-        );
+        setSelectedAssociateIds(prev => {
+            if (prev.includes(cedula)) {
+                return prev.filter(id => id !== cedula);
+            } else {
+                if (prev.length >= 60) {
+                    toast.error("Un líder no puede tener más de 60 asociados");
+                    return prev;
+                }
+                return [...prev, cedula];
+            }
+        });
     };
 
     const handleSave = async () => {
@@ -150,30 +158,74 @@ export function EditPersonaModal({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="telefono">Teléfono</Label>
+                            <Label htmlFor="telefono">WhatsApp</Label>
                             <Input
                                 id="telefono"
                                 value={formData.telefono || ""}
                                 onChange={(e) => handleChange("telefono", e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center justify-between pt-6 pr-2">
-                            <Label htmlFor="vota_en_bello">¿Vota en Bello?</Label>
-                            <Switch
-                                id="vota_en_bello"
-                                checked={formData.vota_en_bello || false}
-                                onCheckedChange={(checked) => handleChange("vota_en_bello", checked)}
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Correo Electrónico</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                value={formData.email || ""}
+                                onChange={(e) => handleChange("email", e.target.value)}
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="estado">Estado de Registro</Label>
+                            <Select
+                                value={formData.estado || "PENDIENTE"}
+                                onValueChange={(value) => handleChange("estado", value as EstadoRegistro)}
+                            >
+                                <SelectTrigger id="estado">
+                                    <SelectValue placeholder="Seleccionar estado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="PENDIENTE">Pendiente</SelectItem>
+                                    <SelectItem value="APROBADO">Aprobado</SelectItem>
+                                    <SelectItem value="RECHAZADO">Rechazado</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="lugar_votacion">Lugar de Votación</Label>
-                        <Input
-                            id="lugar_votacion"
-                            value={formData.lugar_votacion || ""}
-                            onChange={(e) => handleChange("lugar_votacion", e.target.value)}
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="municipio_votacion">Municipio de Votación</Label>
+                            <Select
+                                value={formData.municipio_votacion || "Bello"}
+                                onValueChange={(value) => {
+                                    handleChange("municipio_votacion", value);
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar municipio" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {MUNICIPIOS_ANTIOQUIA.map((m) => (
+                                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="lugar_votacion">Departamento donde vota</Label>
+                            <Select
+                                value={formData.lugar_votacion || "Antioquia"}
+                                onValueChange={(value) => handleChange("lugar_votacion", value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar departamento" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Antioquia">Antioquia</SelectItem>
+                                    <SelectItem value="Otro departamento">Otro departamento</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     {formData.rol === 'asociado' ? (
@@ -197,7 +249,12 @@ export function EditPersonaModal({
                         </div>
                     ) : (
                         <div className="grid gap-2 border-t pt-4 mt-2">
-                            <Label className="text-primary font-bold">Asignar Asociados a este Líder</Label>
+                            <div className="flex justify-between items-center">
+                                <Label className="text-primary font-bold">Asignar Asociados a este Líder</Label>
+                                <span className={`text-xs font-bold ${selectedAssociateIds.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                    {selectedAssociateIds.length} / 60
+                                </span>
+                            </div>
                             <div className="relative mb-2">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
