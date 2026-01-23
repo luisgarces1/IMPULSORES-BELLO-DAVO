@@ -122,7 +122,7 @@ export default function RegistrarAsociado() {
             Registrar Asociado
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Agrega un nuevo integrante a tu equipo de testigos electorales
+            Agrega un nuevo asociado a tu equipo ganador
           </p>
         </div>
 
