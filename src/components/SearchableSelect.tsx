@@ -16,8 +16,13 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 
+interface SearchOption {
+    value: string;
+    label: string;
+}
+
 interface SearchableSelectProps {
-    options: string[];
+    options: string[] | SearchOption[];
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
@@ -43,7 +48,11 @@ export function SearchableSelect({
                     className="w-full justify-between h-auto py-3 px-4 font-normal border-input hover:bg-background"
                 >
                     <span className="truncate">
-                        {value ? options.find((opt) => opt === value) : placeholder}
+                        {value
+                            ? (typeof options[0] === 'string'
+                                ? (options as string[]).find((opt) => opt === value)
+                                : (options as SearchOption[]).find((opt) => opt.value === value)?.label)
+                            : placeholder}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -54,24 +63,30 @@ export function SearchableSelect({
                     <CommandList>
                         <CommandEmpty>{emptyMessage}</CommandEmpty>
                         <CommandGroup>
-                            {options.map((option) => (
-                                <CommandItem
-                                    key={option}
-                                    value={option}
-                                    onSelect={(currentValue) => {
-                                        onChange(currentValue === value ? "" : currentValue);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            value === option ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    {option}
-                                </CommandItem>
-                            ))}
+                            {options.map((option) => {
+                                const isString = typeof option === 'string';
+                                const optValue = isString ? (option as string) : (option as SearchOption).value;
+                                const optLabel = isString ? (option as string) : (option as SearchOption).label;
+
+                                return (
+                                    <CommandItem
+                                        key={optValue}
+                                        value={optLabel} // Filter by label
+                                        onSelect={() => {
+                                            onChange(optValue === value ? "" : optValue);
+                                            setOpen(false);
+                                        }}
+                                    >
+                                        <Check
+                                            className={cn(
+                                                "mr-2 h-4 w-4",
+                                                value === optValue ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                        {optLabel}
+                                    </CommandItem>
+                                );
+                            })}
                         </CommandGroup>
                     </CommandList>
                 </Command>

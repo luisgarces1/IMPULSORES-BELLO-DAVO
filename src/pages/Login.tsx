@@ -12,6 +12,7 @@ type LoginMode = 'lider' | 'admin';
 export default function Login() {
   const [mode, setMode] = useState<LoginMode>('lider');
   const [cedula, setCedula] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [codigoAdmin, setCodigoAdmin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,8 +20,8 @@ export default function Login() {
   const { login } = useAuth();
 
   const handleLiderLogin = async () => {
-    if (!cedula.trim()) {
-      setError('Por favor ingresa tu cédula');
+    if (!cedula.trim() || !telefono.trim()) {
+      setError('Por favor ingresa tu cédula y teléfono');
       return;
     }
 
@@ -32,11 +33,12 @@ export default function Login() {
         .from('personas')
         .select('*')
         .eq('cedula', cedula.trim())
+        .eq('telefono', telefono.trim())
         .eq('rol', 'lider')
         .single();
 
       if (fetchError || !persona) {
-        setError('No se encontró un líder con esta cédula');
+        setError('No se encontró un líder con estos datos');
         setLoading(false);
         return;
       }
@@ -180,20 +182,36 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'lider' ? (
-              <div>
-                <label htmlFor="cedula" className="block text-sm font-medium mb-2">
-                  Número de Cédula
-                </label>
-                <input
-                  id="cedula"
-                  type="text"
-                  value={cedula}
-                  onChange={(e) => setCedula(e.target.value)}
-                  placeholder="Ingresa tu cédula"
-                  className="input-field"
-                  autoComplete="off"
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="cedula" className="block text-sm font-medium mb-2">
+                    Número de Cédula
+                  </label>
+                  <input
+                    id="cedula"
+                    type="text"
+                    value={cedula}
+                    onChange={(e) => setCedula(e.target.value)}
+                    placeholder="Ingresa tu cédula"
+                    className="input-field"
+                    autoComplete="off"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="telefono" className="block text-sm font-medium mb-2">
+                    Número de Teléfono
+                  </label>
+                  <input
+                    id="telefono"
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    placeholder="Ingresa tu teléfono"
+                    className="input-field"
+                    autoComplete="off"
+                  />
+                </div>
+              </>
             ) : (
               <div className="space-y-4">
                 <div>
@@ -244,14 +262,14 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground mt-8">
+          <p className="text-center text-lg text-muted-foreground mt-8">
             ¿No estás registrado?{' '}
-            <a href="/registro" className="text-primary hover:underline font-medium">
+            <a href="/registro" className="text-primary hover:underline font-bold">
               Registrarse como líder
             </a>
           </p>
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   );
 }

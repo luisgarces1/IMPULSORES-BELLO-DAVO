@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, Copy, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LUGARES_VOTACION, MUNICIPIOS_ANTIOQUIA } from '@/constants/locations';
 import { SearchableSelect } from '@/components/SearchableSelect';
@@ -17,7 +17,7 @@ export default function Registro() {
     telefono: '',
     email: '',
     lugarVotacion: 'Antioquia',
-    municipio: 'Bello',
+    municipio: '',
   });
   const [liderId, setLiderId] = useState<string | null>(null);
   const [liderNombre, setLiderNombre] = useState<string | null>(null);
@@ -66,7 +66,7 @@ export default function Registro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion) {
+    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion || !formData.municipio || !formData.telefono) {
       setError('Por favor completa todos los campos requeridos');
       return;
     }
@@ -119,19 +119,17 @@ export default function Registro() {
   };
 
   if (success) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <div className="max-w-md w-full text-center animate-scale-in">
-          <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-success" />
-          </div>
-          <h1 className="text-2xl font-display font-bold mb-2">¡Registro Exitoso!</h1>
-          <p className="text-muted-foreground mb-8">
-            {liderId
-              ? `Te has registrado correctamente en el equipo de ${liderNombre || 'tu líder'}.`
-              : 'Tu solicitud ha sido enviada. Un administrador revisará tu registro.'}
-          </p>
-          {liderId ? (
+    if (liderId) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-8">
+          <div className="max-w-md w-full text-center animate-scale-in">
+            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-success" />
+            </div>
+            <h1 className="text-2xl font-display font-bold mb-2">¡Registro Exitoso!</h1>
+            <p className="text-muted-foreground mb-8">
+              Te has registrado correctamente en el equipo de {liderNombre || 'tu líder'}.
+            </p>
             <button
               onClick={() => {
                 setSuccess(false);
@@ -141,7 +139,7 @@ export default function Registro() {
                   telefono: '',
                   email: '',
                   lugarVotacion: 'Antioquia',
-                  municipio: 'Bello',
+                  municipio: '',
                 });
               }}
               className="btn-primary"
@@ -149,15 +147,73 @@ export default function Registro() {
               Inscribir más asociados
               <ArrowRight className="w-4 h-4" />
             </button>
-          ) : (
+          </div>
+        </div>
+      );
+    }
+
+    const registrationLink = `${window.location.origin}/registro?lider=${formData.cedula}`;
+
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-8">
+        <div className="max-w-2xl w-full animate-scale-in space-y-6">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-success" />
+            </div>
+            <h1 className="text-3xl font-display font-bold text-foreground">
+              Bienvenido, {formData.nombre}
+            </h1>
+          </div>
+
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Vote className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-lg">¡Haz crecer tu equipo!</h3>
+            </div>
+
+            <p className="text-muted-foreground mb-6">
+              Comparte este enlace con tus conocidos para que se registren directamente bajo tu liderazgo, o ingresa con tu cedula y teléfono para que tú los ingreses.
+            </p>
+
+            <div className="bg-muted p-3 rounded-lg border border-border mb-6 font-mono text-sm break-all">
+              {registrationLink}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(registrationLink);
+                  toast.success('Enlace copiado al portapapeles');
+                }}
+                className="flex-1 btn-secondary flex items-center justify-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copiar Enlace
+              </button>
+
+              <button
+                onClick={() => {
+                  const text = `¡Hola! Únete a mi equipo de testigos electorales registrándote aquí: ${registrationLink}`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+                className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Compartir en WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <div className="text-center">
             <button
               onClick={() => navigate('/')}
-              className="btn-primary"
+              className="btn-primary w-full sm:w-auto"
             >
               Ir a Iniciar Sesión
               <ArrowRight className="w-4 h-4" />
             </button>
-          )}
+          </div>
         </div>
       </div>
     );
@@ -235,8 +291,9 @@ export default function Registro() {
           </div>
 
           <div>
-            <label htmlFor="telefono" className="block text-sm font-medium mb-2">
-              WhatsApp
+            <label htmlFor="telefono" className="flex items-center gap-2 text-sm font-medium mb-2">
+              WhatsApp <span className="text-destructive">*</span>
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-green-500 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
             </label>
             <input
               id="telefono"
@@ -246,6 +303,7 @@ export default function Registro() {
               onChange={handleChange}
               placeholder="Ej: 3001234567"
               className="input-field"
+              required
             />
           </div>
 
@@ -266,38 +324,17 @@ export default function Registro() {
 
           <div>
             <label htmlFor="municipio" className="block text-sm font-medium mb-2">
-              Municipio de Votación <span className="text-destructive">*</span>
+              Municipio donde vive <span className="text-destructive">*</span>
             </label>
-            <select
-              id="municipio"
-              name="municipio"
+            <SearchableSelect
+              options={MUNICIPIOS_ANTIOQUIA}
               value={formData.municipio}
-              onChange={handleChange}
-              className="input-field"
-              required
-            >
-              {MUNICIPIOS_ANTIOQUIA.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              onChange={(val) => setFormData({ ...formData, municipio: val })}
+              placeholder="Seleccionar municipio"
+            />
           </div>
 
-          <div>
-            <label htmlFor="lugarVotacion" className="block text-sm font-medium mb-2">
-              Departamento donde vota <span className="text-destructive">*</span>
-            </label>
-            <select
-              id="lugarVotacion"
-              name="lugarVotacion"
-              value={formData.lugarVotacion}
-              onChange={handleChange}
-              className="input-field"
-              required
-            >
-              <option value="Antioquia">Antioquia</option>
-              <option value="Otro departamento">Otro departamento</option>
-            </select>
-          </div>
+
 
           {error && (
             <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
