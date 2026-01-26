@@ -149,9 +149,11 @@ export default function Dashboard() {
         'Cédula Líder': p.cedula_lider || '-',
         'Nombre Líder': p.lider?.nombre_completo || '-',
         'Teléfono': p.telefono || '-',
-        'Lugar Votación': p.lugar_votacion || '-',
-        'Municipio': p.municipio_votacion || '-',
-        'Vota en Bello': p.vota_en_bello ? 'Sí' : 'No',
+        'Email': p.email || '-',
+        'Municipio donde vive': p.municipio_votacion || '-',
+        'Municipio de Votación': p.municipio_puesto || '-',
+        'Puesto de Votación': p.puesto_votacion || '-',
+        'Mesa': p.mesa_votacion || '-',
         'Estado': p.estado,
         'Fecha Registro': p.fecha_registro ? new Date(p.fecha_registro).toLocaleDateString() : '-'
       }));
