@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { MUNICIPIOS_ANTIOQUIA } from "@/constants/locations";
+import { MUNICIPIOS_ANTIOQUIA, LUGARES_VOTACION } from "@/constants/locations";
 import { SearchableSelect } from "@/components/SearchableSelect";
 
 interface EditPersonaModalProps {
@@ -196,14 +196,46 @@ export function EditPersonaModal({
                         </div>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="municipio_votacion">Municipio donde vive</Label>
-                        <SearchableSelect
-                            options={MUNICIPIOS_ANTIOQUIA}
-                            value={formData.municipio_votacion || ""}
-                            onChange={(value) => handleChange("municipio_votacion", value)}
-                            placeholder="Seleccionar municipio"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="municipio_votacion">Municipio donde vive</Label>
+                            <SearchableSelect
+                                options={MUNICIPIOS_ANTIOQUIA}
+                                value={formData.municipio_votacion || ""}
+                                onChange={(value) => handleChange("municipio_votacion", value)}
+                                placeholder="Seleccionar municipio"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="municipio_puesto">Municipio de Votación</Label>
+                            <SearchableSelect
+                                options={MUNICIPIOS_ANTIOQUIA}
+                                value={formData.municipio_puesto || ""}
+                                onChange={(value) => handleChange("municipio_puesto", value)}
+                                placeholder="Seleccionar municipio"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="puesto_votacion">Puesto de Votación</Label>
+                            <Input
+                                id="puesto_votacion"
+                                value={formData.puesto_votacion || ""}
+                                onChange={(e) => handleChange("puesto_votacion", e.target.value)}
+                                placeholder="Ingresar puesto"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="mesa_votacion">Mesa</Label>
+                            <Input
+                                id="mesa_votacion"
+                                value={formData.mesa_votacion || ""}
+                                onChange={(e) => handleChange("mesa_votacion", e.target.value)}
+                                placeholder="Ej: 14"
+                            />
+                        </div>
                     </div>
 
                     {formData.rol === 'asociado' ? (

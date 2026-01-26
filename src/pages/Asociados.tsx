@@ -37,7 +37,13 @@ export default function Asociados() {
         .order('nombre_completo', { ascending: true });
 
       if (error) throw error;
-      setLideres(data || []);
+      const lideresWithFields: Persona[] = (data || []).map((l: any) => ({
+        ...l,
+        municipio_puesto: l.municipio_puesto || null,
+        puesto_votacion: l.puesto_votacion || null,
+        mesa_votacion: l.mesa_votacion || null,
+      }));
+      setLideres(lideresWithFields);
     } catch (error) {
       console.error('Error fetching lideres:', error);
     }
@@ -55,7 +61,15 @@ export default function Asociados() {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAsociados(data || []);
+
+      const asociadosWithFields: Persona[] = (data || []).map((p: any) => ({
+        ...p,
+        municipio_puesto: p.municipio_puesto || null,
+        puesto_votacion: p.puesto_votacion || null,
+        mesa_votacion: p.mesa_votacion || null,
+      }));
+
+      setAsociados(asociadosWithFields);
     } catch (error) {
       console.error('Error fetching asociados:', error);
       toast.error('Error al cargar los asociados');
@@ -97,6 +111,9 @@ export default function Asociados() {
           email: updatedAsociado.email,
           lugar_votacion: updatedAsociado.lugar_votacion,
           municipio_votacion: updatedAsociado.municipio_votacion,
+          municipio_puesto: updatedAsociado.municipio_puesto,
+          puesto_votacion: updatedAsociado.puesto_votacion,
+          mesa_votacion: updatedAsociado.mesa_votacion,
           vota_en_bello: updatedAsociado.vota_en_bello,
           cedula_lider: updatedAsociado.rol === 'lider' ? null : updatedAsociado.cedula_lider,
           rol: updatedAsociado.rol,
@@ -316,6 +333,7 @@ export default function Asociados() {
             <table className="w-full text-left border-collapse min-w-[900px]">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
+                  <th className="table-header py-4 px-6 w-[50px]"></th>
                   <th className="table-header py-4 px-6">Nombre</th>
                   <th className="table-header py-4 px-6">Cédula</th>
                   <th className="table-header py-4 px-6 text-center">Estado</th>
@@ -331,7 +349,7 @@ export default function Asociados() {
                 {filteredAsociados.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isAdmin ? 9 : 8}
+                      colSpan={isAdmin ? 10 : 9}
                       className="py-12 text-center text-muted-foreground"
                     >
                       No se encontraron asociados
@@ -343,6 +361,18 @@ export default function Asociados() {
                       key={asociado.cedula}
                       className="border-b border-border/50 hover:bg-muted/10 transition-colors"
                     >
+                      <td className="py-4 pl-4 pr-0 w-[50px]">
+                        <button
+                          onClick={() => {
+                            setEditingAsociado(asociado);
+                            setIsEditModalOpen(true);
+                          }}
+                          className="p-1.5 hover:bg-muted rounded-md transition-colors"
+                          title="Editar Asociado"
+                        >
+                          <Pencil className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                        </button>
+                      </td>
                       <td className="py-4 px-6 font-medium">{asociado.nombre_completo}</td>
                       <td className="py-4 px-6 text-muted-foreground">{asociado.cedula}</td>
                       <td className="py-4 px-6 text-center">
@@ -397,7 +427,7 @@ export default function Asociados() {
                               setEditingAsociado(asociado);
                               setIsEditModalOpen(true);
                             }}
-                            className="p-1.5 hover:bg-muted rounded-md transition-colors"
+                            className="p-1.5 hover:bg-muted rounded-md transition-colors invisible"
                             title="Editar Asociado"
                           >
                             <Pencil className="w-4 h-4 text-muted-foreground" />

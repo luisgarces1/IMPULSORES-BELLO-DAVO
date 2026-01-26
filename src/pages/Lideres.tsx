@@ -43,6 +43,9 @@ export default function Lideres() {
         );
         return {
           ...lider,
+          municipio_puesto: lider.municipio_puesto || null,
+          puesto_votacion: lider.puesto_votacion || null,
+          mesa_votacion: lider.mesa_votacion || null,
           total_asociados: misAsociados.length,
           votan_antioquia: misAsociados.filter((a) => a.lugar_votacion === 'Antioquia').length,
           no_votan_antioquia: misAsociados.filter((a) => a.lugar_votacion !== 'Antioquia').length,
@@ -91,6 +94,9 @@ export default function Lideres() {
           email: updatedLider.email,
           lugar_votacion: updatedLider.lugar_votacion,
           municipio_votacion: updatedLider.municipio_votacion,
+          municipio_puesto: updatedLider.municipio_puesto,
+          puesto_votacion: updatedLider.puesto_votacion,
+          mesa_votacion: updatedLider.mesa_votacion,
           vota_en_bello: updatedLider.vota_en_bello,
           rol: updatedLider.rol,
           estado: updatedLider.estado,

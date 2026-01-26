@@ -14,6 +14,9 @@ export interface Persona {
   };
   lugar_votacion: string | null;
   municipio_votacion: string | null;
+  municipio_puesto: string | null;
+  puesto_votacion: string | null;
+  mesa_votacion: string | null;
   vota_en_bello: boolean;
   estado: EstadoRegistro;
   fecha_registro: string;
