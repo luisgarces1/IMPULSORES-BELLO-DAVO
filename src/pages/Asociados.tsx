@@ -114,7 +114,6 @@ export default function Asociados() {
           municipio_puesto: updatedAsociado.municipio_puesto,
           puesto_votacion: updatedAsociado.puesto_votacion,
           mesa_votacion: updatedAsociado.mesa_votacion,
-          vota_en_bello: updatedAsociado.vota_en_bello,
           cedula_lider: updatedAsociado.rol === 'lider' ? null : updatedAsociado.cedula_lider,
           rol: updatedAsociado.rol,
           estado: updatedAsociado.estado,

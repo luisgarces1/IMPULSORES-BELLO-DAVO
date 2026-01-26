@@ -40,7 +40,7 @@ export default function Lideres() {
         .select('*')
         .eq('rol', 'asociado');
 
-      const lideresWithStats: LiderWithStats[] = (lideresData || []).map((lider) => {
+      const lideresWithStats: LiderWithStats[] = (lideresData || []).map((lider: any) => {
         const misAsociados = (asociadosData || []).filter(
           (a) => a.cedula_lider === lider.cedula
         );
@@ -100,7 +100,6 @@ export default function Lideres() {
           municipio_puesto: updatedLider.municipio_puesto,
           puesto_votacion: updatedLider.puesto_votacion,
           mesa_votacion: updatedLider.mesa_votacion,
-          vota_en_bello: updatedLider.vota_en_bello,
           rol: updatedLider.rol,
           estado: updatedLider.estado,
           // If downgrading to associate, they need a leader or null
