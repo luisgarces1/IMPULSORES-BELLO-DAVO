@@ -341,7 +341,6 @@ export default function Asociados() {
                   <th className="table-header py-4 px-6">Email</th>
                   <th className="table-header py-4 px-6">Líder</th>
                   <th className="table-header py-4 px-6 text-center">Municipio</th>
-                  <th className="table-header py-4 px-6 text-center">Departamento</th>
                   <th className="table-header py-4 px-6 text-center">Acciones</th>
                 </tr>
               </thead>
@@ -349,7 +348,7 @@ export default function Asociados() {
                 {filteredAsociados.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={isAdmin ? 10 : 9}
+                      colSpan={isAdmin ? 9 : 8}
                       className="py-12 text-center text-muted-foreground"
                     >
                       No se encontraron asociados
@@ -403,9 +402,6 @@ export default function Asociados() {
                       </td>
                       <td className="py-4 px-6 text-center text-muted-foreground text-sm">
                         {asociado.municipio_votacion || '-'}
-                      </td>
-                      <td className="py-4 px-6 text-center text-muted-foreground text-sm">
-                        {asociado.lugar_votacion || '-'}
                       </td>
                       <td className="py-4 px-6 text-center">
                         <div className="flex items-center justify-center gap-2">
