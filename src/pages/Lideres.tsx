@@ -4,7 +4,8 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona, EstadoRegistro, LiderWithStats } from '@/types/database';
 import { EditPersonaModal } from '@/components/EditPersonaModal';
-import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil, XCircle, MessageSquare } from 'lucide-react';
+import { LiderDetailsModal } from '@/components/LiderDetailsModal';
+import { Search, MapPin, Users, Phone, Shield, UserCheck, AlertCircle, Pencil, XCircle, MessageSquare, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,8 @@ export default function Lideres() {
   const [filterEstado, setFilterEstado] = useState<EstadoRegistro | 'TODOS'>('TODOS');
   const [editingLider, setEditingLider] = useState<Persona | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [viewingLider, setViewingLider] = useState<Persona | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchLideres();
@@ -370,6 +373,16 @@ export default function Lideres() {
                     </label>
                     <button
                       onClick={() => {
+                        setViewingLider(lider);
+                        setIsDetailsModalOpen(true);
+                      }}
+                      className="h-[42px] px-4 flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors border border-blue-200 mb-2"
+                      title="Ver Detalles"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
                         setEditingLider(lider);
                         setIsEditModalOpen(true);
                       }}
@@ -402,6 +415,15 @@ export default function Lideres() {
             setEditingLider(null);
           }}
           onSave={handleSaveLider}
+        />
+
+        <LiderDetailsModal
+          lider={viewingLider}
+          isOpen={isDetailsModalOpen}
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setViewingLider(null);
+          }}
         />
       </div>
     </Layout>
