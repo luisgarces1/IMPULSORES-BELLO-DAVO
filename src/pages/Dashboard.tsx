@@ -18,6 +18,25 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from 'recharts';
+
+const CHART_COLORS = [
+  '#0ea5e9', // Sky
+  '#22c55e', // Green
+  '#f59e0b', // Amber
+  '#ef4444', // Red
+  '#8b5cf6', // Violet
+  '#ec4899', // Pink
+  '#f97316', // Orange
+  '#06b6d4', // Cyan
+];
 
 
 export default function Dashboard() {
@@ -33,6 +52,19 @@ export default function Dashboard() {
   const [recentPersonas, setRecentPersonas] = useState<Persona[]>([]);
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const municipalityData = allPersonas.reduce((acc: any, curr) => {
+    const mun = curr.municipio_votacion || 'No definido';
+    const existing = acc.find((item: any) => item.name === mun);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ name: mun, value: 1 });
+    }
+    return acc;
+  }, [])
+    .sort((a: any, b: any) => b.value - a.value)
+    .slice(0, 8); // Show top 8 municipalities
 
   useEffect(() => {
     fetchData();
@@ -399,74 +431,169 @@ export default function Dashboard() {
 
 
 
-        {/* Recent Activity */}
-        <div className="glass-panel overflow-hidden border border-border/50">
-          <div className="p-6 border-b border-border/50 bg-muted/10">
-            <h2 className="text-xl font-display font-semibold">
-              {isAdmin ? 'Registros Recientes' : 'Tu Equipo'}
-            </h2>
-          </div>
-          <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-            <table className="w-full text-left min-w-[800px]">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="table-header py-4 px-6">Nombre</th>
-                  <th className="table-header py-4 px-6">Cédula</th>
-                  <th className="table-header py-4 px-6 text-center">Estado</th>
-                  <th className="table-header py-4 px-6">WhatsApp</th>
-                  <th className="table-header py-4 px-6">Email</th>
-                  <th className="table-header py-4 px-6">Municipio</th>
-                  <th className="table-header py-4 px-6">Departamento</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentPersonas.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-muted-foreground">
-                      No hay registros recientes
-                    </td>
-                  </tr>
-                ) : (
-                  recentPersonas.map((persona) => (
-                    <tr
-                      key={persona.cedula}
-                      className="border-b border-border/50 hover:bg-muted/10 transition-colors"
+        {/* Admin Dashboard: Municipality Chart / Leader Dashboard: Recent Activity */}
+        {isAdmin ? (
+          <div className="glass-panel p-8 border border-border/50">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl font-display font-bold text-foreground">
+                  Distribución por Municipios
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Proporción de inscritos en los principales municipios
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold text-primary uppercase tracking-wider">Visualización 3D Estilizada</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div className="h-[400px] w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={municipalityData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={140}
+                      paddingAngle={5}
+                      dataKey="value"
+                      strokeWidth={0}
                     >
-                      <td className="py-4 px-6 font-medium">{persona.nombre_completo}</td>
-                      <td className="py-4 px-6 text-muted-foreground">{persona.cedula}</td>
-                      <td className="py-4 px-6">
-                        <StatusBadge estado={persona.estado} />
-                      </td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {persona.telefono ? (
-                          <a
-                            href={`https://wa.me/${persona.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent('Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors underline decoration-primary/30 underline-offset-4 font-medium"
+                      {municipalityData.map((_entry: any, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          className="hover:opacity-80 transition-opacity cursor-pointer transition-all duration-300"
+                          style={{ filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.2))' }}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: '16px',
+                        border: 'none',
+                        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+                        backgroundColor: 'white',
+                        padding: '16px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em] mb-1">Total</p>
+                  <p className="text-5xl font-extrabold font-display text-primary drop-shadow-sm">{allPersonas.length}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  Ránking de Municipios
+                </h3>
+                {municipalityData.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-12 bg-muted/5 rounded-2xl border border-dashed border-border/50">Cargando datos...</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {municipalityData.map((item: any, index: number) => (
+                      <div key={item.name} className="group flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/50 hover:bg-white hover:shadow-lg hover:border-primary/20 transition-all duration-300">
+                        <div className="flex items-center gap-4">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shadow-inner"
+                            style={{
+                              backgroundColor: `${CHART_COLORS[index % CHART_COLORS.length]}15`,
+                              color: CHART_COLORS[index % CHART_COLORS.length],
+                              border: `1px solid ${CHART_COLORS[index % CHART_COLORS.length]}30`
+                            }}
                           >
-                            {persona.telefono}
-                          </a>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {persona.email || '-'}
-                      </td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {persona.municipio_votacion || '-'}
-                      </td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {persona.lugar_votacion || '-'}
+                            #{index + 1}
+                          </div>
+                          <div>
+                            <span className="text-sm font-bold block">{item.name}</span>
+                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Municipio</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-lg font-black text-foreground block">{item.value}</span>
+                          <div className="flex items-center gap-1 justify-end">
+                            <TrendingUp className="w-2.5 h-2.5 text-success" />
+                            <span className="text-[10px] text-success font-black">
+                              {Math.round((item.value / allPersonas.length) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Leader View: Recent Activity / Team */
+          <div className="glass-panel overflow-hidden border border-border/50">
+            <div className="p-6 border-b border-border/50 bg-muted/10">
+              <h2 className="text-xl font-display font-semibold">Tu Equipo</h2>
+            </div>
+            <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+              <table className="w-full text-left min-w-[800px]">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="table-header py-4 px-6">Nombre</th>
+                    <th className="table-header py-4 px-6">Cédula</th>
+                    <th className="table-header py-4 px-6 text-center">Estado</th>
+                    <th className="table-header py-4 px-6">WhatsApp</th>
+                    <th className="table-header py-4 px-6">Email</th>
+                    <th className="table-header py-4 px-6">Municipio</th>
+                    <th className="table-header py-4 px-6">Departamento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentPersonas.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                        No hay registros en tu equipo
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    recentPersonas.map((persona) => (
+                      <tr
+                        key={persona.cedula}
+                        className="border-b border-border/50 hover:bg-muted/10 transition-colors"
+                      >
+                        <td className="py-4 px-6 font-medium">{persona.nombre_completo}</td>
+                        <td className="py-4 px-6 text-muted-foreground">{persona.cedula}</td>
+                        <td className="py-4 px-6">
+                          <StatusBadge estado={persona.estado} />
+                        </td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm">
+                          {persona.telefono ? (
+                            <a
+                              href={`https://wa.me/${persona.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent('Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-primary transition-colors underline decoration-primary/30 underline-offset-4 font-medium"
+                            >
+                              {persona.telefono}
+                            </a>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm">{persona.email || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm">{persona.municipio_votacion || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm">{persona.lugar_votacion || '-'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout >
   );
