@@ -130,6 +130,33 @@ export default function Registro() {
             <p className="text-muted-foreground mb-8">
               Te has registrado correctamente en el equipo de {liderNombre || 'tu líder'}.
             </p>
+
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm mb-8 text-left">
+              <div className="flex items-center gap-2 mb-4">
+                <Share2 className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-lg">¡Ayúdanos a crecer!</h3>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                Invita a más personas a unirse al equipo de <strong>{liderNombre}</strong> a través de este enlace:
+              </p>
+
+              <div className="bg-muted p-3 rounded-lg border border-border mb-6 font-mono text-xs break-all">
+                {`${window.location.origin}/registro?lider=${encodeURIComponent(liderNombre || '')}`}
+              </div>
+
+              <button
+                onClick={() => {
+                  const text = `¡Hola! Soy ${formData.nombre}, te invito a unirte al equipo GANADOR de la campaña a la cámara XXXXX de parte del líder ${liderNombre}. Regístrate aquí: ${window.location.origin}/registro?lider=${encodeURIComponent(liderNombre || '')}`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white px-4 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Invitar por WhatsApp
+              </button>
+            </div>
+
             <button
               onClick={() => {
                 setSuccess(false);
@@ -142,7 +169,7 @@ export default function Registro() {
                   municipio: '',
                 });
               }}
-              className="btn-primary"
+              className="btn-secondary w-full"
             >
               Inscribir más asociados
               <ArrowRight className="w-4 h-4" />
@@ -194,7 +221,7 @@ export default function Registro() {
 
               <button
                 onClick={() => {
-                  const text = `¡Hola! Únete a mi equipo de testigos electorales registrándote aquí: ${registrationLink}`;
+                  const text = `Únete a mi equipo GANADOR registrándote aquí: ${registrationLink}`;
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                 }}
                 className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"

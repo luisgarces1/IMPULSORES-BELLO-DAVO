@@ -145,7 +145,7 @@ export default function RegistrarAsociado() {
             </span>
           ) : (
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}`)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(`Únete a mi equipo GANADOR registrándote aquí: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2 bg-success/10 text-success hover:bg-success/20 rounded-xl transition-all font-bold text-xs"
