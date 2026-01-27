@@ -18,7 +18,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-// import { AntioquiaMap } from '@/components/AntioquiaMap';
+
 
 export default function Dashboard() {
   const { isAdmin, cedula, nombre } = useAuth();
@@ -68,12 +68,19 @@ export default function Dashboard() {
             },
           });
 
+          const personasWithFields: Persona[] = (personas || []).map((p: any) => ({
+            ...p,
+            municipio_puesto: p.municipio_puesto || null,
+            puesto_votacion: p.puesto_votacion || null,
+            mesa_votacion: p.mesa_votacion || null,
+          }));
+
           setRecentPersonas(
-            personas
+            personasWithFields
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .slice(0, 5)
           );
-          setAllPersonas(personas);
+          setAllPersonas(personasWithFields);
         }
       } else {
         // Leader: Get only their data
@@ -107,8 +114,22 @@ export default function Dashboard() {
             },
           });
 
-          setRecentPersonas([miInfo, ...misAsociados]);
-          setAllPersonas([miInfo, ...misAsociados]);
+          const mappedInfo: Persona = {
+            ...(miInfo as any),
+            municipio_puesto: (miInfo as any).municipio_puesto || null,
+            puesto_votacion: (miInfo as any).puesto_votacion || null,
+            mesa_votacion: (miInfo as any).mesa_votacion || null,
+          };
+
+          const mappedAsociados: Persona[] = (misAsociados || []).map((p: any) => ({
+            ...p,
+            municipio_puesto: p.municipio_puesto || null,
+            puesto_votacion: p.puesto_votacion || null,
+            mesa_votacion: p.mesa_votacion || null,
+          }));
+
+          setRecentPersonas([mappedInfo, ...mappedAsociados]);
+          setAllPersonas([mappedInfo, ...mappedAsociados]);
         }
       }
     } catch (error) {
@@ -376,24 +397,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Antioquia Map */}
-        {/* 
-        <div className="mb-8">
-          <AntioquiaMap
-            municipioCounts={allPersonas.reduce((acc, curr) => {
-              if (curr.municipio_votacion) {
-                const name = curr.municipio_votacion
-                  .normalize('NFD')
-                  .replace(/[\u0300-\u036f]/g, '')
-                  .toUpperCase()
-                  .trim();
-                acc[name] = (acc[name] || 0) + 1;
-              }
-              return acc;
-            }, {} as Record<string, number>)}
-          />
-        </div> 
-        */}
+
 
         {/* Recent Activity */}
         <div className="glass-panel overflow-hidden border border-border/50">
