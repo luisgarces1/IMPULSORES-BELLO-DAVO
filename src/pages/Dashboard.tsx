@@ -440,7 +440,7 @@ export default function Dashboard() {
                   Distribución por Municipios
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Proporción de inscritos en los principales municipios
+                  porcentaje de personas por Municipio donde vive.
                 </p>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
