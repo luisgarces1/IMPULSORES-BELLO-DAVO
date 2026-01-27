@@ -443,10 +443,16 @@ export default function Dashboard() {
                   porcentaje de personas por Municipio donde vive.
                 </p>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
+              <button
+                onClick={() => {
+                  fetchData();
+                  toast.success('Datos actualizados');
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-primary/5 hover:bg-primary/10 rounded-full border border-primary/10 transition-all active:scale-95"
+              >
                 <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">Visualización 3D Estilizada</span>
-              </div>
+                <span className="text-xs font-bold text-primary uppercase tracking-wider">Actualizar Datos</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
