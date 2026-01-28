@@ -160,6 +160,17 @@ export function EditPersonaModal({
 
     const handleSave = async () => {
         if (!person || !formData) return;
+
+        if (!formData.nombre_completo || !formData.cedula || !formData.telefono || !formData.municipio_votacion || !formData.municipio_puesto) {
+            toast.error("Por favor completa todos los campos requeridos (incluyendo Municipio de Votación)");
+            return;
+        }
+
+        if (formData.telefono.trim().length !== 10) {
+            toast.error("El número de WhatsApp debe tener exactamente 10 dígitos");
+            return;
+        }
+
         setIsSaving(true);
         try {
             await onSave(formData as Persona, formData.rol === 'lider' ? selectedAssociateIds : undefined);
@@ -281,7 +292,7 @@ export function EditPersonaModal({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="municipio_puesto" className="text-xs font-bold uppercase text-muted-foreground">Municipio de Votación</Label>
+                            <Label htmlFor="municipio_puesto" className="text-xs font-bold uppercase text-muted-foreground">Municipio de Votación <span className="text-destructive">*</span></Label>
                             <SearchableSelect
                                 options={MUNICIPIOS_ANTIOQUIA}
                                 value={formData.municipio_puesto || ""}

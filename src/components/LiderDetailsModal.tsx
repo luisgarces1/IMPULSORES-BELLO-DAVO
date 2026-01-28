@@ -4,8 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "@/types/database";
-import { Loader2, User, MapPin, Phone, Mail, Users, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Loader2, User, MapPin, Phone, Mail, Users, CheckCircle, Clock, XCircle, Share2, Copy, MessageSquare } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 interface LiderDetailsModalProps {
     lider: Persona | null;
@@ -110,6 +111,42 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                                 <p className="text-sm italic text-muted-foreground">{lider.notas}</p>
                             </div>
                         )}
+                    </div>
+
+                    {/* Invitation Link Section (Admin can see/copy for the leader) */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                                <Share2 className="w-4 h-4" />
+                                Enlace de Invitación para {lider.nombre_completo.split(' ')[0]}
+                            </div>
+                            <div className="p-2 bg-background border rounded-lg font-mono text-[10px] break-all text-muted-foreground">
+                                {`${window.location.origin}/registro?lider=${encodeURIComponent(lider.nombre_completo)}`}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    className="flex-1 gap-2 text-xs h-9"
+                                    onClick={() => {
+                                        const msg = `Hola soy ${lider.nombre_completo}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(lider.nombre_completo)}`;
+                                        navigator.clipboard.writeText(msg);
+                                        toast.success("¡Mensaje de invitación copiado!");
+                                    }}
+                                >
+                                    <Copy className="w-3 h-3" />
+                                    Copiar
+                                </Button>
+                                <a
+                                    href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${lider.nombre_completo}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(lider.nombre_completo)}`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#25D366] text-white rounded-md font-medium hover:bg-[#128C7E] transition-all text-xs h-9"
+                                >
+                                    <MessageSquare className="w-3 h-3" />
+                                    WhatsApp
+                                </a>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Associates List */}

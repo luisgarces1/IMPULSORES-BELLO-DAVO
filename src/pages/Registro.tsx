@@ -109,8 +109,13 @@ export default function Registro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion || !formData.municipio || !formData.telefono) {
-      setError('Por favor completa todos los campos requeridos');
+    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion || !formData.municipio || !formData.telefono || !formData.municipio_puesto) {
+      setError('Por favor completa todos los campos requeridos (incluyendo Municipio de Votación)');
+      return;
+    }
+
+    if (formData.telefono.trim().length !== 10) {
+      setError('El número de WhatsApp debe tener exactamente 10 dígitos');
       return;
     }
 
@@ -423,7 +428,7 @@ export default function Registro() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="municipio_puesto" className="block text-sm font-medium mb-2">
-                Municipio de Votación
+                Municipio de Votación <span className="text-destructive">*</span>
               </label>
               <SearchableSelect
                 options={MUNICIPIOS_ANTIOQUIA}
