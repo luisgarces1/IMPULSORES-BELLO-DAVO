@@ -16,7 +16,13 @@ import {
   TrendingUp,
   Download,
   MessageSquare,
+  Search,
+  Filter,
+  Share2,
+  Copy,
 } from 'lucide-react';
+import { SearchableSelect } from '@/components/SearchableSelect';
+import { MUNICIPIOS_ANTIOQUIA } from '@/constants/locations';
 import * as XLSX from 'xlsx';
 import {
   PieChart,
@@ -25,6 +31,11 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from 'recharts';
 
 const CHART_COLORS = [
@@ -53,8 +64,12 @@ export default function Dashboard() {
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedMunForPuestos, setSelectedMunForPuestos] = useState<string | null>(null);
+
+  // MEDICIÓN PRINCIPAL: Municipio donde votan (Sincronizado con estados)
   const municipalityData = allPersonas.reduce((acc: any, curr) => {
-    const mun = curr.municipio_votacion || 'No definido';
+    const isNoDefinido = curr.estado === 'PENDIENTE';
+    const mun = isNoDefinido ? 'No definido' : (curr.municipio_puesto || 'No definido');
     const existing = acc.find((item: any) => item.name === mun);
     if (existing) {
       existing.value += 1;
@@ -65,6 +80,37 @@ export default function Dashboard() {
   }, [])
     .sort((a: any, b: any) => b.value - a.value)
     .slice(0, 8); // Show top 8 municipalities
+
+  // COMPARATIVA: Municipio donde viven
+  const viveMunicipalityData = allPersonas.reduce((acc: any, curr) => {
+    const mun = curr.municipio_votacion || 'No definido';
+    const existing = acc.find((item: any) => item.name === mun);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ name: mun, value: 1 });
+    }
+    return acc;
+  }, [])
+    .sort((a: any, b: any) => b.value - a.value)
+    .slice(0, 8);
+
+  // DRILL-DOWN: Puestos por municipio seleccionado
+  const puestosData = selectedMunForPuestos
+    ? allPersonas
+      .filter(p => (p.municipio_puesto || 'No definido') === selectedMunForPuestos)
+      .reduce((acc: any, curr) => {
+        const puesto = curr.puesto_votacion || 'Sin puesto';
+        const existing = acc.find((item: any) => item.name === puesto);
+        if (existing) {
+          existing.value += 1;
+        } else {
+          acc.push({ name: puesto, value: 1 });
+        }
+        return acc;
+      }, [])
+      .sort((a: any, b: any) => b.value - a.value)
+    : [];
 
   useEffect(() => {
     fetchData();
@@ -105,6 +151,7 @@ export default function Dashboard() {
             municipio_puesto: p.municipio_puesto || null,
             puesto_votacion: p.puesto_votacion || null,
             mesa_votacion: p.mesa_votacion || null,
+            notas: p.notas || null,
           }));
 
           setRecentPersonas(
@@ -151,6 +198,7 @@ export default function Dashboard() {
             municipio_puesto: (miInfo as any).municipio_puesto || null,
             puesto_votacion: (miInfo as any).puesto_votacion || null,
             mesa_votacion: (miInfo as any).mesa_votacion || null,
+            notas: (miInfo as any).notas || null,
           };
 
           const mappedAsociados: Persona[] = (misAsociados || []).map((p: any) => ({
@@ -158,6 +206,7 @@ export default function Dashboard() {
             municipio_puesto: p.municipio_puesto || null,
             puesto_votacion: p.puesto_votacion || null,
             mesa_votacion: p.mesa_votacion || null,
+            notas: p.notas || null,
           }));
 
           setRecentPersonas([mappedInfo, ...mappedAsociados]);
@@ -208,7 +257,8 @@ export default function Dashboard() {
         'Puesto de Votación': p.puesto_votacion || '-',
         'Mesa': p.mesa_votacion || '-',
         'Estado': p.estado,
-        'Fecha Registro': p.fecha_registro ? new Date(p.fecha_registro).toLocaleDateString() : '-'
+        'Fecha Registro': p.fecha_registro ? new Date(p.fecha_registro).toLocaleDateString() : '-',
+        'Notas': p.notas || '-'
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
@@ -262,6 +312,49 @@ export default function Dashboard() {
             </button>
           )}
         </div>
+
+        {/* Global Invitation Link (Admin only) */}
+        {isAdmin && (
+          <div className="glass-panel p-6 mb-8 border-primary/20 bg-primary/5">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="flex-1">
+                <h2 className="text-xl font-display font-bold text-primary mb-2 flex items-center gap-2">
+                  <Share2 className="w-5 h-5" />
+                  Invitar Nuevo Líder
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Envía este enlace para que un nuevo líder se registre él mismo en el sistema:
+                </p>
+                <div className="flex gap-2 p-3 bg-background border border-border rounded-xl font-mono text-xs overflow-x-auto mb-4 md:mb-0">
+                  {`${window.location.origin}/registro`}
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 w-full md:w-auto">
+                <button
+                  onClick={() => {
+                    const baseUrl = window.location.origin;
+                    const msg = `Hola haz sido escogido en un grupo selecto para ser parte de este equipo ganador, como líder podrás ingresar tus colaboradores para hacer crecer nuestro sueño. Regístrate aquí: ${baseUrl}/registro`;
+                    navigator.clipboard.writeText(msg);
+                    toast.success('¡Invitación copiada al portapapeles!');
+                  }}
+                  className="btn-primary whitespace-nowrap"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copiar Mensaje Líder
+                </button>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`Hola haz sido escogido en un grupo selecto para ser parte de este equipo ganador, como líder podrás ingresar tus colaboradores para hacer crecer nuestro sueño. Regístrate aquí: ${window.location.origin}/registro`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-medium hover:bg-[#128C7E] transition-all shadow-lg shadow-green-500/20 whitespace-nowrap"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
+                  Enviar a WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Share Invitation Section (for Leaders) */}
         {!isAdmin && (
@@ -437,10 +530,10 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
               <div>
                 <h2 className="text-2xl font-display font-bold text-foreground">
-                  Distribución por Municipios
+                  Distribución por Municipio de Votación
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  porcentaje de personas por Municipio donde vive.
+                  conteo de personas según el municipio donde tienen inscrito su puesto.
                 </p>
               </div>
               <button
@@ -505,7 +598,14 @@ export default function Dashboard() {
                 ) : (
                   <div className="grid grid-cols-1 gap-3">
                     {municipalityData.map((item: any, index: number) => (
-                      <div key={item.name} className="group flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/50 hover:bg-white hover:shadow-lg hover:border-primary/20 transition-all duration-300">
+                      <div
+                        key={item.name}
+                        onClick={() => setSelectedMunForPuestos(item.name)}
+                        className={`group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 cursor-pointer ${selectedMunForPuestos === item.name
+                          ? 'bg-primary/10 border-primary shadow-md'
+                          : 'bg-muted/20 border-border/50 hover:bg-white hover:shadow-lg hover:border-primary/20'
+                          }`}
+                      >
                         <div className="flex items-center gap-4">
                           <div
                             className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold shadow-inner"
@@ -519,7 +619,7 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <span className="text-sm font-bold block">{item.name}</span>
-                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Municipio</span>
+                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Mun. Votación</span>
                           </div>
                         </div>
                         <div className="text-right">
@@ -537,6 +637,134 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+
+            {/* Comparativa: Vive vs Vota */}
+            <div className="mt-16 pt-12 border-t border-border/50">
+              <div className="mb-8">
+                <h2 className="text-2xl font-display font-bold text-foreground">
+                  Comparativa de Residencia vs Votación
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Relación entre dónde viven los colaboradores y dónde ejercen su voto (Estados).
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Ranking Municipios donde VIVEN */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                    Top Municipios donde Viven
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {viveMunicipalityData.map((item: any) => (
+                      <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-muted/10 border border-border/30">
+                        <span className="text-sm font-medium">{item.name}</span>
+                        <span className="text-sm font-bold text-success">{item.value} <span className="text-[10px] text-muted-foreground font-normal">pers.</span></span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gráfico de Barras Comparativo */}
+                <div className="h-[300px] w-full bg-muted/5 rounded-3xl border border-border/30 p-6">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: 'Votan en su Mun.', value: allPersonas.filter(p => p.estado === 'APROBADO').length },
+                        { name: 'Votan en otro Mun.', value: allPersonas.filter(p => p.estado === 'RECHAZADO').length },
+                        { name: 'Sin Info Votación', value: allPersonas.filter(p => p.estado === 'PENDIENTE').length }
+                      ]}
+                      margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                      <YAxis fontSize={10} axisLine={false} tickLine={false} tickFormatter={(val) => Math.floor(val).toString()} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Bar dataKey="value" radius={[10, 10, 0, 0]}>
+                        <Cell fill="#22c55e" />
+                        <Cell fill="#f43f5e" />
+                        <Cell fill="#94a3b8" />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalle por Puesto de Votación (Buscador) */}
+            <div className="mt-16 pt-12 border-t border-border/50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div className="max-w-md">
+                  <h2 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+                    <MapPin className="w-7 h-7 text-primary" />
+                    Buscador por Puestos
+                  </h2>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Selecciona un municipio para ver el detalle de personas por puesto físico.
+                  </p>
+                </div>
+                <div className="w-full md:w-72">
+                  <SearchableSelect
+                    options={MUNICIPIOS_ANTIOQUIA}
+                    value={selectedMunForPuestos || ''}
+                    onChange={(val) => setSelectedMunForPuestos(val)}
+                    placeholder="Buscar municipio..."
+                  />
+                </div>
+              </div>
+
+              {selectedMunForPuestos ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  {puestosData.length > 0 ? (
+                    puestosData.map((p: any, idx: number) => (
+                      <div
+                        key={p.name}
+                        className="group relative overflow-hidden p-6 bg-card border border-border rounded-3xl hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300"
+                        style={{ borderLeftWidth: '6px', borderLeftColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="p-2 bg-muted/50 rounded-lg group-hover:bg-primary/10 transition-colors">
+                            <MapPin className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/30 px-2 py-1 rounded-md">
+                            #{idx + 1}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-foreground text-sm leading-tight mb-4 min-h-[2.5rem] line-clamp-2" title={p.name}>
+                          {p.name}
+                        </h4>
+                        <div className="flex items-end justify-between pt-4 border-t border-border/30">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Colaboradores</p>
+                            <p className="text-3xl font-black text-primary font-display">{p.value}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Peso</p>
+                            <p className="text-sm font-bold text-foreground">
+                              {Math.round((p.value / allPersonas.filter(per => per.municipio_puesto === selectedMunForPuestos).length) * 100)}%
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 bg-muted/5 rounded-[40px] border-2 border-dashed border-border/50">
+                      <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                      <p className="text-muted-foreground font-medium">No se encontraron puestos para {selectedMunForPuestos}.</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 bg-muted/5 rounded-[40px] border border-border/30">
+                  <Filter className="w-16 h-16 text-primary/20 mb-6" />
+                  <p className="text-muted-foreground max-w-xs text-center leading-relaxed">
+                    Usa el buscador superior para filtrar y visualizar la distribución electoral por puestos físicos.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           /* Leader View: Recent Activity / Team */
@@ -553,14 +781,20 @@ export default function Dashboard() {
                     <th className="table-header py-4 px-6 text-center">Estado</th>
                     <th className="table-header py-4 px-6">WhatsApp</th>
                     <th className="table-header py-4 px-6">Email</th>
-                    <th className="table-header py-4 px-6">Municipio</th>
-                    <th className="table-header py-4 px-6">Departamento</th>
+                    <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Municipio Vive</th>
+                    <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Mun. Puesto</th>
+                    <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Puesto de Votación</th>
+                    <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Mesa</th>
+                    <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Notas</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentPersonas.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                      <td
+                        colSpan={10}
+                        className="py-12 text-center text-muted-foreground"
+                      >
                         No hay registros en tu equipo
                       </td>
                     </tr>
@@ -578,7 +812,11 @@ export default function Dashboard() {
                         <td className="py-4 px-6 text-muted-foreground text-sm">
                           {persona.telefono ? (
                             <a
-                              href={`https://wa.me/${persona.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent('Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?')}`}
+                              href={`https://wa.me/${persona.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent(
+                                persona.rol === 'lider'
+                                  ? 'Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?'
+                                  : 'Hola, soy el coordinador electoral, nos encanta tu apoyo a este proyecto, sigue invitando amigos a este equipo ganador. Mil gracias.'
+                              )}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="hover:text-primary transition-colors underline decoration-primary/30 underline-offset-4 font-medium"
@@ -591,7 +829,12 @@ export default function Dashboard() {
                         </td>
                         <td className="py-4 px-6 text-muted-foreground text-sm">{persona.email || '-'}</td>
                         <td className="py-4 px-6 text-muted-foreground text-sm">{persona.municipio_votacion || '-'}</td>
-                        <td className="py-4 px-6 text-muted-foreground text-sm">{persona.lugar_votacion || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm font-medium">{persona.municipio_puesto || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm">{persona.puesto_votacion || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm">{persona.mesa_votacion || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm max-w-[200px] truncate" title={persona.notas || ''}>
+                          {persona.notas || '-'}
+                        </td>
                       </tr>
                     ))
                   )}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, Copy, Share2 } from 'lucide-react';
@@ -18,6 +18,9 @@ export default function Registro() {
     email: '',
     lugarVotacion: 'Antioquia',
     municipio: '',
+    municipio_puesto: '',
+    puesto_votacion: '',
+    mesa_votacion: '',
   });
   const [liderId, setLiderId] = useState<string | null>(null);
   const [liderNombre, setLiderNombre] = useState<string | null>(null);
@@ -58,6 +61,46 @@ export default function Registro() {
     }
   });
 
+  const [puestosOptions, setPuestosOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingPuestos, setLoadingPuestos] = useState(false);
+
+  useState(() => {
+    if (formData.municipio_puesto) {
+      fetchPuestos(formData.municipio_puesto);
+    }
+  });
+
+  useEffect(() => {
+    if (formData.municipio_puesto) {
+      fetchPuestos(formData.municipio_puesto);
+    } else {
+      setPuestosOptions([]);
+    }
+  }, [formData.municipio_puesto]);
+
+  const fetchPuestos = async (municipio: string) => {
+    setLoadingPuestos(true);
+    // Normalizar municipio para búsqueda (quitar tildes y a mayúsculas)
+    const normalizedMin = municipio.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+
+    try {
+      const { data, error } = await (supabase as any)
+        .from('puestos_votacion')
+        .select('puesto')
+        .eq('municipio', normalizedMin)
+        .order('puesto', { ascending: true });
+
+      if (error) throw error;
+      const options = (data || []).map(p => ({ value: p.puesto, label: p.puesto }));
+      setPuestosOptions(options);
+    } catch (error) {
+      console.error("Error fetching puestos:", error);
+      setPuestosOptions([]);
+    } finally {
+      setLoadingPuestos(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
@@ -88,6 +131,16 @@ export default function Registro() {
         return;
       }
 
+      // Calculate auto-status
+      let calculateEstado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' = 'PENDIENTE';
+      if (formData.municipio === 'No Se' || formData.municipio_puesto === 'No Se') {
+        calculateEstado = 'PENDIENTE';
+      } else if (formData.municipio === formData.municipio_puesto) {
+        calculateEstado = 'APROBADO';
+      } else {
+        calculateEstado = 'RECHAZADO';
+      }
+
       // Insert new person
       const isAsociado = !!liderId;
       const { error: insertError } = await supabase.from('personas').insert({
@@ -99,8 +152,11 @@ export default function Registro() {
         cedula_lider: isAsociado ? liderId : formData.cedula.trim(),
         lugar_votacion: formData.lugarVotacion,
         municipio_votacion: formData.municipio,
-        vota_en_bello: formData.municipio === 'Bello',
-        estado: 'PENDIENTE',
+        municipio_puesto: formData.municipio_puesto || null,
+        puesto_votacion: formData.puesto_votacion || null,
+        mesa_votacion: formData.mesa_votacion || null,
+        vota_en_bello: formData.municipio_puesto === 'Bello',
+        estado: calculateEstado,
         registrado_por: isAsociado ? liderId : formData.cedula.trim(),
       });
 
@@ -167,6 +223,9 @@ export default function Registro() {
                   email: '',
                   lugarVotacion: 'Antioquia',
                   municipio: '',
+                  municipio_puesto: '',
+                  puesto_votacion: '',
+                  mesa_votacion: '',
                 });
               }}
               className="btn-secondary w-full"
@@ -358,6 +417,55 @@ export default function Registro() {
               value={formData.municipio}
               onChange={(val) => setFormData({ ...formData, municipio: val })}
               placeholder="Seleccionar municipio"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="municipio_puesto" className="block text-sm font-medium mb-2">
+                Municipio de Votación
+              </label>
+              <SearchableSelect
+                options={MUNICIPIOS_ANTIOQUIA}
+                value={formData.municipio_puesto}
+                onChange={(val) => {
+                  const updates: any = { municipio_puesto: val };
+                  if (val === 'No Se') {
+                    updates.puesto_votacion = '';
+                    updates.mesa_votacion = '';
+                  }
+                  setFormData({ ...formData, ...updates });
+                }}
+                placeholder="Seleccionar municipio"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="puesto_votacion" className="block text-sm font-medium mb-2">
+                Puesto de Votación
+              </label>
+              <SearchableSelect
+                options={puestosOptions}
+                value={formData.puesto_votacion}
+                onChange={(val) => setFormData({ ...formData, puesto_votacion: val })}
+                placeholder={loadingPuestos ? "Cargando..." : "Seleccionar puesto"}
+                disabled={!formData.municipio_puesto}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="mesa_votacion" className="block text-sm font-medium mb-2">
+              Mesa de Votación
+            </label>
+            <input
+              id="mesa_votacion"
+              name="mesa_votacion"
+              type="text"
+              value={formData.mesa_votacion}
+              onChange={handleChange}
+              placeholder="Ej: 5"
+              className="input-field"
             />
           </div>
 

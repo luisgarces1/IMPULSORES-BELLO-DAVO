@@ -19,6 +19,7 @@ export interface Persona {
   mesa_votacion: string | null;
   estado: EstadoRegistro;
   vota_en_bello: boolean | null;
+  notas?: string | null;
   fecha_registro: string;
   registrado_por: string | null;
   created_at: string;

@@ -34,7 +34,16 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                 .order('nombre_completo', { ascending: true });
 
             if (error) throw error;
-            setAssociates(data || []);
+            const associatesWithFields: Persona[] = (data || []).map((p: any) => ({
+                ...p,
+                municipio_puesto: p.municipio_puesto || null,
+                puesto_votacion: p.puesto_votacion || null,
+                mesa_votacion: p.mesa_votacion || null,
+                notas: p.notas || null,
+                updated_at: p.updated_at || p.created_at,
+                registrado_por: p.registrado_por || null,
+            }));
+            setAssociates(associatesWithFields);
         } catch (error) {
             console.error("Error fetching associates:", error);
         } finally {
@@ -89,13 +98,18 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                                 <span>{lider.municipio_votacion || "Sin municipio"}</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
-                                <User className="w-4 h-4 text-muted-foreground" />
                                 <span>{lider.rol.toUpperCase()} - <span className={
                                     lider.estado === 'APROBADO' ? 'text-success' :
                                         lider.estado === 'RECHAZADO' ? 'text-destructive' : 'text-warning'
                                 }>{lider.estado}</span></span>
                             </div>
                         </div>
+                        {lider.notas && (
+                            <div className="col-span-1 md:col-span-2 mt-2 pt-2 border-t border-border/50">
+                                <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">Notas / Observaciones</p>
+                                <p className="text-sm italic text-muted-foreground">{lider.notas}</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Associates List */}
@@ -134,13 +148,20 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                                                         <p className="text-xs text-muted-foreground mt-1">CC: {associate.cedula}</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex flex-col gap-1 items-end shrink-0">
                                                     <div className="text-right hidden sm:block">
-                                                        <p className="text-xs font-medium">{associate.municipio_votacion}</p>
-                                                        <p className="text-[10px] text-muted-foreground">{associate.lugar_votacion}</p>
-                                                    </div>
-                                                    <div title={associate.estado}>
-                                                        {getStatusIcon(associate.estado)}
+                                                        <p className="text-xs font-bold text-primary leading-tight">{associate.municipio_puesto || '-'}</p>
+                                                        <p className="text-[10px] text-muted-foreground leading-tight truncate max-w-[150px]" title={associate.puesto_votacion || ''}>
+                                                            {associate.puesto_votacion || 'Sin puesto'}
+                                                        </p>
+                                                        <div className="flex items-center justify-end gap-1 mt-0.5">
+                                                            <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-mono">
+                                                                Mesa: {associate.mesa_votacion || '-'}
+                                                            </span>
+                                                            <div title={associate.estado}>
+                                                                {getStatusIcon(associate.estado)}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

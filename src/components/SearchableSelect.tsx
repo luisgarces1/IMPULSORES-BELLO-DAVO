@@ -27,6 +27,7 @@ interface SearchableSelectProps {
     onChange: (value: string) => void;
     placeholder?: string;
     emptyMessage?: string;
+    disabled?: boolean;
 }
 
 export function SearchableSelect({
@@ -35,6 +36,7 @@ export function SearchableSelect({
     onChange,
     placeholder = "Seleccionar...",
     emptyMessage = "No se encontraron resultados.",
+    disabled = false,
 }: SearchableSelectProps) {
     const [open, setOpen] = React.useState(false);
 
@@ -45,6 +47,7 @@ export function SearchableSelect({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
+                    disabled={disabled}
                     className="w-full justify-between h-auto py-3 px-4 font-normal border-input hover:bg-background"
                 >
                     <span className="truncate">
