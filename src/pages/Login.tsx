@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { Vote, Shield, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { Vote, Shield, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import FaceLogin from '@/components/face-auth/FaceLogin';
-import FaceRegistration from '@/components/face-auth/FaceRegistration';
+
+// Lazy load heavy components to prevent initial bundle crash
+const FaceLogin = lazy(() => import('@/components/face-auth/FaceLogin'));
+const FaceRegistration = lazy(() => import('@/components/face-auth/FaceRegistration'));
 
 type LoginMode = 'lider' | 'admin';
 
@@ -230,8 +232,14 @@ export default function Login() {
                 </div>
                 {/* Face Auth Components */}
                 <div className="pt-2 border-t border-border">
-                  <FaceLogin />
-                  <FaceRegistration />
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  }>
+                    <FaceLogin />
+                    <FaceRegistration />
+                  </Suspense>
                 </div>
               </div>
             )}

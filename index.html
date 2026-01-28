@@ -26,6 +26,21 @@
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
   <script>
+    // Debugging helper for blank pages in production
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('Global Error:', msg, url, lineNo, columnNo, error);
+      const root = document.getElementById('root');
+      if (root && root.innerHTML === '') {
+        root.innerHTML = '<div style="padding: 20px; color: red; font-family: sans-serif;">' +
+          '<h2>Error de Carga</h2>' +
+          '<p>' + msg + '</p>' +
+          '<small>' + url + ':' + lineNo + '</small>' +
+          '<p>Es probable que falten las variables de entorno de Supabase en Vercel.</p>' +
+          '</div>';
+      }
+      return false;
+    };
+    
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');
