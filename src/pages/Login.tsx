@@ -115,7 +115,7 @@ export default function Login() {
             CRM Electoral
           </h1>
           <p className="text-xl text-primary-foreground/80 mb-8 max-w-md">
-            Sistema de gestión de testigos electorales para las elecciones de Bello 2026
+            Sistema de gestión de impulsores electorales para las elecciones de Bello 2026
           </p>
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-primary-foreground/70">

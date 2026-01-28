@@ -298,8 +298,8 @@ export default function Dashboard() {
             </h1>
             <p className="text-muted-foreground">
               {isAdmin
-                ? 'Vista general del sistema de testigos electorales'
-                : 'Gestiona tu equipo de testigos electorales'}
+                ? 'Vista general del sistema de impulsores electorales'
+                : 'Gestiona tu equipo de impulsores electorales'}
             </p>
           </div>
           {isAdmin && (
