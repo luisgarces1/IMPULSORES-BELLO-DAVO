@@ -151,11 +151,11 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
 
                     {/* Associates List */}
                     <div className="flex-1 flex flex-col min-h-0">
-                        <div className="flex items-center justify-between mb-3 px-1">
-                            <h3 className="font-semibold flex items-center gap-2">
-                                <Users className="w-4 h-4" />
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <Users className="w-5 h-5 text-primary" />
                                 Equipo de Trabajo
-                                <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                                <span className="bg-primary/10 text-primary text-sm px-2.5 py-0.5 rounded-full">
                                     {associates.length}
                                 </span>
                             </h3>
@@ -166,36 +166,36 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             </div>
                         ) : (
-                            <ScrollArea className="h-[40vh] border rounded-lg bg-background p-2">
+                            <ScrollArea className="h-[500px] border rounded-lg bg-background p-2">
                                 {associates.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full py-8 text-muted-foreground">
-                                        <Users className="w-8 h-8 mb-2 opacity-20" />
-                                        <p>No tiene asociados registrados</p>
+                                    <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
+                                        <Users className="w-12 h-12 mb-4 opacity-20" />
+                                        <p className="text-lg">No tiene asociados registrados</p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {associates.map((associate) => (
-                                            <div key={associate.cedula} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                                            <div key={associate.cedula} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                                                         {associate.nombre_completo.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium leading-none">{associate.nombre_completo}</p>
-                                                        <p className="text-xs text-muted-foreground mt-1">CC: {associate.cedula}</p>
+                                                        <p className="text-base font-semibold leading-none">{associate.nombre_completo}</p>
+                                                        <p className="text-sm text-muted-foreground mt-1.5 font-mono">CC: {associate.cedula}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col gap-1 items-end shrink-0">
                                                     <div className="text-right hidden sm:block">
-                                                        <p className="text-xs font-bold text-primary leading-tight">{associate.municipio_puesto || '-'}</p>
-                                                        <p className="text-[10px] text-muted-foreground leading-tight truncate max-w-[150px]" title={associate.puesto_votacion || ''}>
+                                                        <p className="text-sm font-bold text-primary leading-tight">{associate.municipio_puesto || '-'}</p>
+                                                        <p className="text-xs text-muted-foreground leading-tight truncate max-w-[200px] mt-1" title={associate.puesto_votacion || ''}>
                                                             {associate.puesto_votacion || 'Sin puesto'}
                                                         </p>
-                                                        <div className="flex items-center justify-end gap-1 mt-0.5">
-                                                            <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-mono">
+                                                        <div className="flex items-center justify-end gap-2 mt-2">
+                                                            <span className="text-[10px] bg-muted px-2 py-1 rounded-md text-muted-foreground font-mono">
                                                                 Mesa: {associate.mesa_votacion || '-'}
                                                             </span>
-                                                            <div title={associate.estado}>
+                                                            <div title={associate.estado} className="scale-110">
                                                                 {getStatusIcon(associate.estado)}
                                                             </div>
                                                         </div>
