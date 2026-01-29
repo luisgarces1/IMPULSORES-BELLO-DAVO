@@ -326,7 +326,7 @@ export default function Registro() {
               <Vote className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold">Chimbolandia</h1>
+              <h1 className="font-display font-bold">Impulsores Electorales</h1>
               <p className="text-xs text-muted-foreground">
                 {liderId ? 'Registro de Asociado' : 'Registro de Líder'}
               </p>

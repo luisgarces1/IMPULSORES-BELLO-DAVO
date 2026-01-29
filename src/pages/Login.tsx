@@ -111,24 +111,48 @@ export default function Login() {
               <Vote className="w-8 h-8" />
             </div>
           </div>
-          <h1 className="text-5xl font-display font-bold mb-4">
-            Chimbolandia
+          <h1 className="text-5xl font-display font-bold mb-4 uppercase">
+            Impulsores Electorales
           </h1>
           <p className="text-xl text-primary-foreground/80 mb-8 max-w-md">
-            Sistema de gestión de impulsores electorales para las elecciones de Bello 2026
+            Sistema de gestión de impulsores electorales
           </p>
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-primary-foreground/70">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center">
-                <User className="w-4 h-4" />
+            <div className="flex items-center gap-3 text-primary-foreground/90">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <span className="text-xl">🔹</span>
               </div>
-              <span>Registro de líderes y asociados</span>
+              <span className="font-medium">Estrategia estructurada para captar votantes</span>
             </div>
-            <div className="flex items-center gap-3 text-primary-foreground/70">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center">
-                <Shield className="w-4 h-4" />
+            <div className="flex items-center gap-3 text-primary-foreground/90">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <span className="text-xl">🔹</span>
               </div>
-              <span>Control de estados y validaciones</span>
+              <span className="font-medium">Segmentación estratégica (por municipios, lugar de votacion).</span>
+            </div>
+            <div className="flex items-center gap-3 text-primary-foreground/90">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <span className="text-xl">🔹</span>
+              </div>
+              <span className="font-medium">Acciones concretas: mensajes y seguimiento.</span>
+            </div>
+            <div className="flex items-center gap-3 text-primary-foreground/90">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <span className="text-xl">🔹</span>
+              </div>
+              <span className="font-medium">Métricas en tiempo real para mejorar decisiones.</span>
+            </div>
+            <div className="flex items-center gap-3 text-primary-foreground/90">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <span className="text-xl">🔹</span>
+              </div>
+              <span className="font-medium">Aumenta la eficiencia de tu equipo de campo</span>
+            </div>
+            <div className="flex items-center gap-3 text-primary-foreground/90">
+              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
+                <span className="text-xl">🔹</span>
+              </div>
+              <span className="font-medium">Transforma contactos en votos</span>
             </div>
           </div>
         </div>
@@ -146,8 +170,8 @@ export default function Login() {
               <Vote className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-xl">Chimbolandia</h1>
-              <p className="text-sm text-muted-foreground">Bello 2026</p>
+              <h1 className="font-display font-bold text-xl">Impulsores Electorales</h1>
+              <p className="text-sm text-muted-foreground font-medium">Gestión Estratégica</p>
             </div>
           </div>
 

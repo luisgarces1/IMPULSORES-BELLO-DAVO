@@ -265,7 +265,7 @@ export default function Dashboard() {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Personas');
 
-      const fileName = `Reporte_Chimbolandia_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Reporte_Impulsores_Electorales_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
       toast.success('Reporte descargado correctamente');
     } catch (error) {
