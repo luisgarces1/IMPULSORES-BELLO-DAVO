@@ -399,7 +399,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {isAdmin && (
             <StatCard
               title="Total Líderes"
@@ -416,20 +416,7 @@ export default function Dashboard() {
             variant="default"
             description={isAdmin ? 'Total de asociados' : 'Tus asociados'}
           />
-          <StatCard
-            title="Votan en Antioquia"
-            value={stats.votanEnAntioquia}
-            icon={MapPin}
-            variant="success"
-            description="Votantes en el departamento"
-          />
-          <StatCard
-            title="Fuera de Antioquia"
-            value={stats.noVotanAntioquia}
-            icon={TrendingUp}
-            variant="warning"
-            description="Votan en otro departamento"
-          />
+
 
         </div>
 

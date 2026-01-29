@@ -12,6 +12,7 @@ import Asociados from "./pages/Asociados";
 import RegistrarLider from "./pages/RegistrarLider";
 import RegistrarAsociado from "./pages/RegistrarAsociado";
 import Chat from "./pages/Chat";
+import TerritorioElectoral from "./pages/TerritorioElectoral";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/registrar-lider" element={<AdminRoute><RegistrarLider /></AdminRoute>} />
           <Route path="/registrar-asociado" element={<ProtectedRoute><RegistrarAsociado /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/territorio" element={<AdminRoute><TerritorioElectoral /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

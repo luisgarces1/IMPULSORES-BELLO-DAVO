@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   MessageSquare,
-  Download
+  Download,
+  Map
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,7 @@ export function Sidebar() {
     { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
     { path: '/registrar-lider', icon: UserPlus, label: 'Registrar Líder', show: isAdmin },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
+    { path: '/territorio', icon: Map, label: 'Territorio Electoral', show: isAdmin },
     { path: '/chat', icon: MessageSquare, label: 'Chat', show: true },
   ];
 
