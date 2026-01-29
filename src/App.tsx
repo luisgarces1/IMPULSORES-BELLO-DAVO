@@ -13,9 +13,15 @@ import RegistrarLider from "./pages/RegistrarLider";
 import RegistrarAsociado from "./pages/RegistrarAsociado";
 import Chat from "./pages/Chat";
 import TerritorioElectoral from "./pages/TerritorioElectoral";
+import Mensajeria from "./pages/Mensajeria";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Force title update to bypass cache
+if (typeof document !== 'undefined') {
+  document.title = "PREGONEROS";
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
@@ -46,6 +52,7 @@ const App = () => (
           <Route path="/registrar-asociado" element={<ProtectedRoute><RegistrarAsociado /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/territorio" element={<AdminRoute><TerritorioElectoral /></AdminRoute>} />
+          <Route path="/mensajeria" element={<AdminRoute><Mensajeria /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

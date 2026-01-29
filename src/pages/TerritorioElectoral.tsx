@@ -106,7 +106,7 @@ export default function TerritorioElectoral() {
                                 <Users className="w-6 h-6 text-primary" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Total Impulsores</p>
+                                <p className="text-sm text-muted-foreground">Total Registrados</p>
                                 <p className="text-3xl font-bold font-display text-primary">{totalPersonas}</p>
                             </div>
                         </div>
@@ -149,7 +149,7 @@ export default function TerritorioElectoral() {
                                     Mapa de Antioquia
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
-                                    Distribución territorial de impulsores
+                                    Distribución territorial de registros
                                 </p>
                             </div>
                         </div>
@@ -165,7 +165,7 @@ export default function TerritorioElectoral() {
                         {/* Legend */}
                         <div className="glass-panel p-6">
                             <h3 className="text-lg font-display font-bold text-primary mb-4">
-                                Leyenda de Impulsores
+                                Leyenda de Registros
                             </h3>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
@@ -186,7 +186,7 @@ export default function TerritorioElectoral() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb' }} />
-                                    <span className="text-sm font-medium text-muted-foreground">Sin Impulsores</span>
+                                    <span className="text-sm font-medium text-muted-foreground">Sin Registros</span>
                                 </div>
                             </div>
                         </div>
@@ -197,8 +197,8 @@ export default function TerritorioElectoral() {
                                 Análisis Territorial
                             </h3>
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                El mapa muestra la distribución de impulsores electorales por cada municipio de Antioquia.
-                                Los municipios en verde oscuro representan las zonas con mayor número de impulsores registrados.
+                                El mapa muestra la distribución de registros por cada municipio de Antioquia.
+                                Los municipios en verde oscuro representan las zonas con mayor número de registros.
                             </p>
                         </div>
 
@@ -230,7 +230,7 @@ export default function TerritorioElectoral() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-lg font-bold text-primary">{mun.count}</p>
-                                            <p className="text-xs text-muted-foreground">impulsores</p>
+                                            <p className="text-xs text-muted-foreground">registros</p>
                                         </div>
                                     </div>
                                 ))}
@@ -261,7 +261,7 @@ export default function TerritorioElectoral() {
                                 <div className="flex items-end justify-between">
                                     <div>
                                         <p className="text-2xl font-black text-primary">{mun.count}</p>
-                                        <p className="text-xs text-muted-foreground">impulsores</p>
+                                        <p className="text-xs text-muted-foreground">registros</p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-bold text-success">{mun.percentage.toFixed(1)}%</p>
