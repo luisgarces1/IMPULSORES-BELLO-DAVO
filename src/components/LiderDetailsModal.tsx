@@ -35,14 +35,14 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                 .order('nombre_completo', { ascending: true });
 
             if (error) throw error;
-            const associatesWithFields: Persona[] = (data || []).map((p) => ({
-                ...p as any,
+            const associatesWithFields: Persona[] = (data as any[] || []).map((p) => ({
+                ...p,
                 municipio_puesto: p.municipio_puesto || null,
                 puesto_votacion: p.puesto_votacion || null,
                 mesa_votacion: p.mesa_votacion || null,
                 notas: p.notas || null,
-                updated_at: p.updated_at || (p as any).created_at,
-                registrado_por: (p as any).registrado_por || null,
+                updated_at: p.updated_at || p.created_at,
+                registrado_por: p.registrado_por || null,
             }));
             setAssociates(associatesWithFields);
         } catch (error) {

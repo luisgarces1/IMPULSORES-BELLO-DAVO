@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MapPin, TrendingUp, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import MapaAntioquia from '@/components/MapaAntioquia';
+import { Persona } from '@/types/database';
 
 interface MunicipioData {
     name: string;
@@ -24,17 +25,19 @@ export default function TerritorioElectoral() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const { data: personas } = await supabase
+            const { data: personasData } = await supabase
                 .from('personas')
                 .select('*');
+
+            const personas = (personasData as any[]) || [];
 
             if (personas) {
                 const total = personas.length;
                 setTotalPersonas(total);
 
                 // Agrupar por municipio
-                const municipiosMap = personas.reduce((acc: any, curr) => {
-                    const mun = curr.municipio_votacion || 'No definido';
+                const municipiosMap = personas.reduce((acc: Record<string, number>, curr) => {
+                    const mun = curr.municipio_puesto || 'No definido';
                     if (!acc[mun]) {
                         acc[mun] = 0;
                     }
@@ -62,12 +65,11 @@ export default function TerritorioElectoral() {
     };
 
     const getColorByCount = (count: number): string => {
-        if (count > 10) return '#0d5e3a'; // Verde muy oscuro
-        if (count >= 5) return '#16a34a'; // Verde oscuro
-        if (count >= 3) return '#22c55e'; // Verde medio
-        if (count >= 2) return '#4ade80'; // Verde claro
-        if (count >= 1) return '#86efac'; // Verde muy claro
-        return '#e5e7eb'; // Gris (sin impulsores)
+        if (count > 30) return '#059669'; // Esmeralda oscuro
+        if (count >= 15) return '#10b981'; // Esmeralda medio
+        if (count >= 5) return '#34d399'; // Esmeralda claro
+        if (count >= 1) return '#a7f3d0'; // Aqua muy claro
+        return '#f3f4f6'; // Gris fondo (sin impulsores)
     };
 
     if (loading) {
@@ -167,27 +169,23 @@ export default function TerritorioElectoral() {
                             </h3>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#0d5e3a' }} />
-                                    <span className="text-sm font-medium">&gt; 10</span>
+                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#059669' }} />
+                                    <span className="text-sm font-medium">&gt; 30</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#16a34a' }} />
-                                    <span className="text-sm font-medium">5 - 10</span>
+                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#10b981' }} />
+                                    <span className="text-sm font-medium">15 - 30</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#22c55e' }} />
-                                    <span className="text-sm font-medium">3 - 4</span>
+                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#34d399' }} />
+                                    <span className="text-sm font-medium">5 - 14</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#4ade80' }} />
-                                    <span className="text-sm font-medium">2</span>
+                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#a7f3d0' }} />
+                                    <span className="text-sm font-medium">1 - 4</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#86efac' }} />
-                                    <span className="text-sm font-medium">1</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-muted" />
+                                    <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb' }} />
                                     <span className="text-sm font-medium text-muted-foreground">Sin Impulsores</span>
                                 </div>
                             </div>

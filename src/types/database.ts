@@ -1,4 +1,4 @@
-// Database types for CRM Electoral
+// Database types for Chimbolandia
 export type UserRole = 'lider' | 'asociado' | 'admin';
 export type EstadoRegistro = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
 

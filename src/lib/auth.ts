@@ -22,13 +22,13 @@ export const useAuth = create<AuthState>()(
       rol: null,
       isAdmin: false,
       isLoggedIn: false,
-      login: (cedula, nombre, rol, isAdmin = false) => 
+      login: (cedula, nombre, rol, isAdmin = false) =>
         set({ cedula, nombre, rol, isAdmin, isLoggedIn: true }),
-      logout: () => 
+      logout: () =>
         set({ cedula: null, nombre: null, rol: null, isAdmin: false, isLoggedIn: false }),
     }),
     {
-      name: 'crm-electoral-auth',
+      name: 'chimbolandia-auth',
     }
   )
 );

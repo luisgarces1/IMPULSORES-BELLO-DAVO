@@ -107,7 +107,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="font-display font-bold text-sidebar-foreground text-lg">
-              CRM Electoral
+              Chimbolandia
             </h1>
 
           </div>

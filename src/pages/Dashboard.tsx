@@ -265,7 +265,7 @@ export default function Dashboard() {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Personas');
 
-      const fileName = `Reporte_CRM_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Reporte_Chimbolandia_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
       toast.success('Reporte descargado correctamente');
     } catch (error) {
@@ -671,7 +671,7 @@ export default function Dashboard() {
                       />
                       <Bar dataKey="value" radius={[10, 10, 0, 0]}>
                         <Cell fill="#22c55e" />
-                        <Cell fill="#f43f5e" />
+                        <Cell fill="#FF0000" />
                         <Cell fill="#94a3b8" />
                       </Bar>
                     </BarChart>

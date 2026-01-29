@@ -43,7 +43,6 @@ export default function MapaAntioquia({ municipiosData }: MapaAntioquiaProps) {
             zoomControl: true,
             scrollWheelZoom: true,
             attributionControl: false,
-            background: '#f3f4f6'
         });
 
         mapRef.current = map;
@@ -63,7 +62,7 @@ export default function MapaAntioquia({ municipiosData }: MapaAntioquiaProps) {
                             fillColor: getColorByCount(count),
                             weight: 1,
                             opacity: 1,
-                            color: '#ffffff', // Bordes blancos como en la foto
+                            color: '#000000', // Bordes negros
                             fillOpacity: 1
                         };
                     },
@@ -93,24 +92,25 @@ export default function MapaAntioquia({ municipiosData }: MapaAntioquiaProps) {
 
                         layer.on({
                             mouseover: (e) => {
-                                const l = e.target;
+                                const l = e.target as L.Path;
                                 l.setStyle({
                                     weight: 2,
                                     color: '#059669',
                                     fillOpacity: 0.9
                                 });
+                                // Open popup on hover
+                                l.openPopup();
                             },
                             mouseout: (e) => {
-                                const l = e.target;
-                                layer.setStyle({
+                                const l = e.target as L.Path;
+                                l.setStyle({
                                     weight: 1,
-                                    color: '#ffffff',
+                                    color: '#000000',
                                     fillOpacity: 1
                                 });
+                                // Close popup when leaving
+                                l.closePopup();
                             },
-                            click: (e) => {
-                                map.fitBounds(e.target.getBounds());
-                            }
                         });
                     }
                 }).addTo(map);

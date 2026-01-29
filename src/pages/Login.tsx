@@ -112,7 +112,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-5xl font-display font-bold mb-4">
-            CRM Electoral
+            Chimbolandia
           </h1>
           <p className="text-xl text-primary-foreground/80 mb-8 max-w-md">
             Sistema de gestión de impulsores electorales para las elecciones de Bello 2026
@@ -146,7 +146,7 @@ export default function Login() {
               <Vote className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-xl">CRM Electoral</h1>
+              <h1 className="font-display font-bold text-xl">Chimbolandia</h1>
               <p className="text-sm text-muted-foreground">Bello 2026</p>
             </div>
           </div>
