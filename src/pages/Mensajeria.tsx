@@ -405,7 +405,14 @@ export default function Mensajeria() {
                                                                     let phone = item.contact.telefono.replace(/\+|-|\s/g, '');
                                                                     if (phone.length === 10) phone = '57' + phone;
 
-                                                                    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(pMsg)}`, '_blank');
+                                                                    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(pMsg)}`;
+                                                                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                                                                    if (isMobile) {
+                                                                        window.location.href = waUrl;
+                                                                    } else {
+                                                                        window.open(waUrl, '_blank');
+                                                                    }
 
                                                                     const updatedQueue = [...queue];
                                                                     updatedQueue[idx].status = 'sent';
