@@ -42,7 +42,8 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
+        // Añadimos un timestamp para forzar al navegador a verificar el Service Worker
+        navigator.serviceWorker.register('/sw.js?v=' + Date.now());
       });
     }
   </script>
