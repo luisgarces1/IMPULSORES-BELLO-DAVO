@@ -214,7 +214,7 @@ export default function Mensajeria() {
                             <CardContent className="space-y-4">
                                 <textarea
                                     className="input-field min-h-[200px] resize-none text-base p-4"
-                                    placeholder="Hola {nombre}, este es un mensaje de prueba de parte de Pregoneros..."
+                                    placeholder="Hola {nombre}, este es un mensaje de prueba de parte de Impulsores Electorales..."
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     disabled={isSending}

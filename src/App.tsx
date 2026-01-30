@@ -20,7 +20,7 @@ const queryClient = new QueryClient();
 
 // Force title update to bypass cache
 if (typeof document !== 'undefined') {
-  document.title = "PREGONEROS";
+  document.title = "IMPULSORES ELECTORALES";
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
