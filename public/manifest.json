@@ -1,7 +1,7 @@
 {
-    "name": "Líderes Electorales",
-    "short_name": "Líderes",
-    "description": "Sistema de gestión para líderes electorales y asociados",
+    "name": "Impulsores Electorales",
+    "short_name": "Impulsores",
+    "description": "Sistema de gestión para impulsores electorales y asociados",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
