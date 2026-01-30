@@ -1,7 +1,7 @@
 {
-    "name": "Pregoneros",
-    "short_name": "Pregoneros",
-    "description": "Sistema de gestión Pregoneros",
+    "name": "Impulsores Electorales",
+    "short_name": "Impulsores",
+    "description": "Sistema de gestión para impulsores electorales y asociados",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

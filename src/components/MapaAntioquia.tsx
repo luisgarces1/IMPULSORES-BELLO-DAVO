@@ -77,7 +77,7 @@ export default function MapaAntioquia({ municipiosData }: MapaAntioquiaProps) {
                   ${name}
                 </div>
                 <div style="color: #6b7280; font-size: 11px; margin-bottom: 2px;">
-                  Registros
+                  Impulsores Registrados
                 </div>
                 <div style="font-size: 24px; font-weight: 800; color: #059669;">
                   ${count}

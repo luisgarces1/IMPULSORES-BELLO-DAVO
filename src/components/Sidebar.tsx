@@ -109,7 +109,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="font-display font-bold text-sidebar-foreground text-lg">
-              Pregoneros
+              Impulsores Electorales
             </h1>
 
           </div>
