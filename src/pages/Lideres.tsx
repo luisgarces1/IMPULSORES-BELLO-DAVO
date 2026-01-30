@@ -184,7 +184,7 @@ export default function Lideres() {
             Gestión de Líderes
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Administra todos los líderes electorales y sus equipos
+            Administra todos los líderes y sus equipos
           </p>
         </div>
 

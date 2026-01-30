@@ -13,7 +13,8 @@ import {
   X,
   MessageSquare,
   Download,
-  Map
+  Map,
+  Send
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -94,6 +95,7 @@ export function Sidebar() {
     { path: '/registrar-lider', icon: UserPlus, label: 'Registrar Líder', show: isAdmin },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
     { path: '/territorio', icon: Map, label: 'Territorio Electoral', show: isAdmin },
+    { path: '/mensajeria', icon: Send, label: 'Mensajería WhatsApp', show: isAdmin },
     { path: '/chat', icon: MessageSquare, label: 'Chat', show: true },
   ];
 
@@ -107,7 +109,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="font-display font-bold text-sidebar-foreground text-lg">
-              Impulsores Electorales
+              Pregoneros
             </h1>
 
           </div>

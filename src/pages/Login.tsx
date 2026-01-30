@@ -112,10 +112,10 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-5xl font-display font-bold mb-4 uppercase">
-            Impulsores Electorales
+            Pregoneros
           </h1>
           <p className="text-xl text-primary-foreground/80 mb-8 max-w-md">
-            Sistema de gestión de impulsores electorales
+            Sistema de gestión de pregoneros
           </p>
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-primary-foreground/90">
@@ -170,7 +170,7 @@ export default function Login() {
               <Vote className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-xl">Impulsores Electorales</h1>
+              <h1 className="font-display font-bold text-xl">Pregoneros</h1>
               <p className="text-sm text-muted-foreground font-medium">Gestión Estratégica</p>
             </div>
           </div>
