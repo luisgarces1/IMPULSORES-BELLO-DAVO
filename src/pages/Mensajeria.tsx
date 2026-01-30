@@ -145,20 +145,13 @@ export default function Mensajeria() {
 
                     const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(personalizedMsg)}`;
 
-                    // ABRIR WHATSAPP
-                    const newWin = window.open(waUrl, '_blank');
+                    // Detectar si es móvil
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-                    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-                        // Si fue bloqueado por el navegador
-                        updatedQueue[currentIndex].status = 'error';
-                        updatedQueue[currentIndex].error = 'Pop-up bloqueado';
-                        setQueue(updatedQueue);
-                        setIsSending(false);
-                        toast.error('Navegador bloqueó la ventana. Por favor, permite pop-ups para este sitio.', {
-                            duration: 5000,
-                        });
-                    } else {
-                        // Marcar como enviado
+                    if (isMobile) {
+                        // En móvil es mejor ir directo para evitar bloqueos de popups
+                        window.location.href = waUrl;
+                        // For mobile, we assume it opens and mark as sent immediately.
                         updatedQueue[currentIndex].status = 'sent';
                         setQueue(updatedQueue);
 
@@ -169,6 +162,26 @@ export default function Mensajeria() {
                         if (nextIndex >= queue.length) {
                             setIsSending(false);
                             toast.success('¡Envío masivo completado!');
+                        }
+                    } else {
+                        const newWin = window.open(waUrl, '_blank');
+                        if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+                            updatedQueue[currentIndex].status = 'error';
+                            updatedQueue[currentIndex].error = 'Pop-up bloqueado';
+                            setQueue(updatedQueue);
+                            setIsSending(false);
+                            toast.error('Permite los pop-ups para el envío automático');
+                        } else {
+                            // ... resto de la lógica para PC
+                            updatedQueue[currentIndex].status = 'sent';
+                            setQueue(updatedQueue);
+                            const nextIndex = currentIndex + 1;
+                            setCurrentIndex(nextIndex);
+                            setProgress(Math.round((nextIndex / queue.length) * 100));
+                            if (nextIndex >= queue.length) {
+                                setIsSending(false);
+                                toast.success('¡Envío masivo completado!');
+                            }
                         }
                     }
                 } catch (err) {
