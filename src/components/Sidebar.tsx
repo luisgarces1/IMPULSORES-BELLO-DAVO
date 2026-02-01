@@ -13,7 +13,9 @@ import {
   X,
   MessageSquare,
   Download,
-  Map
+  Map,
+  UserCog,
+  UserCheck
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -88,10 +90,10 @@ export function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
-    { path: '/registrar-asociado', icon: UserPlus, label: 'Registrar Asociado', show: !isAdmin },
     { path: '/asociados', icon: ClipboardList, label: 'Asociados', show: true },
     { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
-    { path: '/registrar-lider', icon: UserPlus, label: 'Registrar Líder', show: isAdmin },
+    { path: '/registrar-lider', icon: UserCog, label: 'Registrar Líder', show: isAdmin },
+    { path: '/registrar-asociado', icon: UserCheck, label: 'Registrar Asociado', show: true },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
     { path: '/territorio', icon: Map, label: 'Territorio Electoral', show: isAdmin },
     { path: '/chat', icon: MessageSquare, label: 'Chat', show: true },
