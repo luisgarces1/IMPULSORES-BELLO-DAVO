@@ -10,7 +10,7 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 
 
 export default function RegistrarAsociado() {
-  const { cedula: cedulaLider, nombre } = useAuth();
+  const { cedula: cedulaLider, nombre, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [countAsociados, setCountAsociados] = useState<number | null>(null);
   const [success, setSuccess] = useState(false);
@@ -25,9 +25,42 @@ export default function RegistrarAsociado() {
     municipio_puesto: '',
     puesto_votacion: '',
     mesa_votacion: '',
+    selectedLider: '', // New field for admin
   });
 
   const [lastRegistered, setLastRegistered] = useState<any>(null);
+  const [leadersOptions, setLeadersOptions] = useState<{ value: string; label: string }[]>([]);
+
+  // Initialize selectedLider with current user if not admin or default
+  useEffect(() => {
+    if (cedulaLider && !formData.selectedLider) {
+      setFormData(prev => ({ ...prev, selectedLider: cedulaLider }));
+    }
+  }, [cedulaLider]);
+
+  // Fetch leaders for admin
+  useEffect(() => {
+    if (isAdmin) {
+      const fetchLeaders = async () => {
+        const { data } = await supabase
+          .from('personas')
+          .select('cedula, nombre_completo')
+          .eq('rol', 'lider')
+          .neq('cedula', cedulaLider); // Exclude current admin to add manually at top
+
+        const others = (data || []).map(l => ({
+          value: l.cedula,
+          label: `${l.nombre_completo} (${l.cedula})`
+        }));
+
+        setLeadersOptions([
+          { value: cedulaLider || '', label: 'Administrador (Yo)' },
+          ...others
+        ]);
+      };
+      fetchLeaders();
+    }
+  }, [isAdmin, cedulaLider]);
 
   useState(() => {
     const checkCount = async () => {
@@ -95,11 +128,34 @@ export default function RegistrarAsociado() {
       return;
     }
 
-    // Check max 60 asociados
-    if (countAsociados !== null && countAsociados >= 60) {
-      setError('Ya tienes el máximo de 60 asociados registrados');
-      return;
+    // Determine effective leader
+    const effectiveLeader = isAdmin && formData.selectedLider ? formData.selectedLider : cedulaLider;
+
+    // Check max 60 asociados (Logic might need adjustment for Admin registering for others, but keeping as is for now or checking against effective leader?)
+    //Ideally we should check the count for the *target* leader.
+
+    // For now, let's skip the strict count check for admin or assume admin knows what they are doing, 
+    // OR we should really fetch count for `effectiveLeader`.
+
+    // Let's quickly fetch count for effective leader if different
+    if (effectiveLeader !== cedulaLider) {
+      const { count } = await supabase
+        .from('personas')
+        .select('*', { count: 'exact', head: true })
+        .eq('cedula_lider', effectiveLeader)
+        .eq('rol', 'asociado');
+
+      if (count !== null && count >= 60) {
+        setError('El líder seleccionado ya tiene el máximo de 60 asociados');
+        return;
+      }
+    } else {
+      if (countAsociados !== null && countAsociados >= 60) {
+        setError('Ya tienes el máximo de 60 asociados registrados');
+        return;
+      }
     }
+
 
     setLoading(true);
     setError('');
@@ -135,7 +191,7 @@ export default function RegistrarAsociado() {
         telefono: formData.telefono.trim() || null,
         email: formData.email.trim() || null,
         rol: 'asociado',
-        cedula_lider: cedulaLider,
+        cedula_lider: effectiveLeader,
         lugar_votacion: formData.lugarVotacion,
         municipio_votacion: formData.municipio,
         municipio_puesto: formData.municipio_puesto || null,
@@ -143,17 +199,19 @@ export default function RegistrarAsociado() {
         mesa_votacion: formData.mesa_votacion || null,
         vota_en_bello: formData.municipio_puesto === 'Bello',
         estado: calculateEstado,
-        registrado_por: cedulaLider,
+        registrado_por: cedulaLider, // Always logged in user
       });
 
       if (insertError) throw insertError;
 
       setSuccess(true);
       setLastRegistered(formData);
-      setCountAsociados((prev) => (prev !== null ? prev + 1 : 1));
+      if (effectiveLeader === cedulaLider) {
+        setCountAsociados((prev) => (prev !== null ? prev + 1 : 1));
+      }
       toast.success('¡Asociado registrado exitosamente!');
 
-      // Reset form
+      // Reset form keeping selected leader
       setFormData({
         cedula: '',
         nombre: '',
@@ -164,6 +222,7 @@ export default function RegistrarAsociado() {
         municipio_puesto: '',
         puesto_votacion: '',
         mesa_votacion: '',
+        selectedLider: formData.selectedLider,
       });
     } catch (err: any) {
       console.error('Registration error:', err);
@@ -263,6 +322,19 @@ export default function RegistrarAsociado() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
+              {isAdmin && (
+                <div>
+                  <label htmlFor="selectedLider" className="block text-sm font-medium mb-2">
+                    Seleccionar Líder <span className="text-destructive">*</span>
+                  </label>
+                  <SearchableSelect
+                    options={leadersOptions}
+                    value={formData.selectedLider}
+                    onChange={(val) => setFormData({ ...formData, selectedLider: val })}
+                    placeholder="Buscar líder..."
+                  />
+                </div>
+              )}
               <div>
                 <label htmlFor="cedula" className="block text-sm font-medium mb-2">
                   Cédula del Asociado <span className="text-destructive">*</span>
