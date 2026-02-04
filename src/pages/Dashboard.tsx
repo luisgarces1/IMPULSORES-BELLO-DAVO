@@ -799,7 +799,7 @@ export default function Dashboard() {
                         <td className="py-4 px-6 text-muted-foreground text-sm">
                           {persona.telefono ? (
                             <a
-                              href={`https://wa.me/${persona.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent(
+                              href={`https://wa.me/57${persona.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent(
                                 persona.rol === 'lider'
                                   ? 'Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?'
                                   : 'Hola, soy el coordinador electoral, nos encanta tu apoyo a este proyecto, sigue invitando amigos a este equipo ganador. Mil gracias.'

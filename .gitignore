@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+~$*.xlsm
+*.tmp
