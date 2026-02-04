@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from 'react';
+﻿import { useState, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +47,7 @@ export default function Login() {
 
       login(persona.cedula, persona.nombre_completo, 'lider', false);
       toast.success(`¡Bienvenido, ${persona.nombre_completo}!`);
-      navigate('/registrar-asociado');
+      navigate('/registrar-votante');
     } catch {
       setError('Error al iniciar sesión');
     } finally {

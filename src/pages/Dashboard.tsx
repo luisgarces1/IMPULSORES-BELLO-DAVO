@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -54,11 +54,11 @@ export default function Dashboard() {
   const { isAdmin, cedula, nombre } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalLideres: 0,
-    totalAsociados: 0,
+    totalVotantes: 0,
     votanEnAntioquia: 0,
     noVotanAntioquia: 0,
     lideres: { pendientes: 0, aprobados: 0, rechazados: 0 },
-    asociados: { pendientes: 0, aprobados: 0, rechazados: 0 },
+    Votantes: { pendientes: 0, aprobados: 0, rechazados: 0 },
   });
   const [recentPersonas, setRecentPersonas] = useState<Persona[]>([]);
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
@@ -127,11 +127,11 @@ export default function Dashboard() {
 
         if (personas) {
           const lideres = personas.filter((p) => p.rol === 'lider');
-          const asociados = personas.filter((p) => p.rol === 'asociado');
+          const Votantes = personas.filter((p) => p.rol === 'asociado');
 
           setStats({
             totalLideres: lideres.length,
-            totalAsociados: asociados.length,
+            totalVotantes: Votantes.length,
             votanEnAntioquia: personas.filter((p) => p.lugar_votacion === 'Antioquia').length,
             noVotanAntioquia: personas.filter((p) => p.lugar_votacion !== 'Antioquia').length,
             lideres: {
@@ -139,10 +139,10 @@ export default function Dashboard() {
               aprobados: lideres.filter((l) => l.estado === 'APROBADO').length,
               rechazados: lideres.filter((l) => l.estado === 'RECHAZADO').length,
             },
-            asociados: {
-              pendientes: asociados.filter((a) => a.estado === 'PENDIENTE').length,
-              aprobados: asociados.filter((a) => a.estado === 'APROBADO').length,
-              rechazados: asociados.filter((a) => a.estado === 'RECHAZADO').length,
+            Votantes: {
+              pendientes: Votantes.filter((a) => a.estado === 'PENDIENTE').length,
+              aprobados: Votantes.filter((a) => a.estado === 'APROBADO').length,
+              rechazados: Votantes.filter((a) => a.estado === 'RECHAZADO').length,
             },
           });
 
@@ -163,7 +163,7 @@ export default function Dashboard() {
         }
       } else {
         // Leader: Get only their data
-        const { data: misAsociados } = await supabase
+        const { data: misVotantes } = await supabase
           .from('personas')
           .select('*')
           .eq('cedula_lider', cedula)
@@ -175,21 +175,21 @@ export default function Dashboard() {
           .eq('cedula', cedula)
           .single();
 
-        if (misAsociados && miInfo) {
+        if (misVotantes && miInfo) {
           setStats({
             totalLideres: 1,
-            totalAsociados: misAsociados.length,
-            votanEnAntioquia: misAsociados.filter((p) => p.lugar_votacion === 'Antioquia').length,
-            noVotanAntioquia: misAsociados.filter((p) => p.lugar_votacion !== 'Antioquia').length,
+            totalVotantes: misVotantes.length,
+            votanEnAntioquia: misVotantes.filter((p) => p.lugar_votacion === 'Antioquia').length,
+            noVotanAntioquia: misVotantes.filter((p) => p.lugar_votacion !== 'Antioquia').length,
             lideres: {
               pendientes: miInfo.estado === 'PENDIENTE' ? 1 : 0,
               aprobados: miInfo.estado === 'APROBADO' ? 1 : 0,
               rechazados: miInfo.estado === 'RECHAZADO' ? 1 : 0,
             },
-            asociados: {
-              pendientes: misAsociados.filter((p) => p.estado === 'PENDIENTE').length,
-              aprobados: misAsociados.filter((p) => p.estado === 'APROBADO').length,
-              rechazados: misAsociados.filter((p) => p.estado === 'RECHAZADO').length,
+            Votantes: {
+              pendientes: misVotantes.filter((p) => p.estado === 'PENDIENTE').length,
+              aprobados: misVotantes.filter((p) => p.estado === 'APROBADO').length,
+              rechazados: misVotantes.filter((p) => p.estado === 'RECHAZADO').length,
             },
           });
 
@@ -201,7 +201,7 @@ export default function Dashboard() {
             notas: (miInfo as any).notas || null,
           };
 
-          const mappedAsociados: Persona[] = (misAsociados || []).map((p: any) => ({
+          const mappedVotantes: Persona[] = (misVotantes || []).map((p: any) => ({
             ...p,
             municipio_puesto: p.municipio_puesto || null,
             puesto_votacion: p.puesto_votacion || null,
@@ -209,8 +209,8 @@ export default function Dashboard() {
             notas: p.notas || null,
           }));
 
-          setRecentPersonas([mappedInfo, ...mappedAsociados]);
-          setAllPersonas([mappedInfo, ...mappedAsociados]);
+          setRecentPersonas([mappedInfo, ...mappedVotantes]);
+          setAllPersonas([mappedInfo, ...mappedVotantes]);
         }
       }
     } catch (error) {
@@ -247,7 +247,7 @@ export default function Dashboard() {
       const formattedData = dataToExport.map(p => ({
         'Nombre Completo': p.nombre_completo,
         'Cédula': p.cedula,
-        'Rol': p.rol === 'lider' ? 'Líder' : 'Asociado',
+        'Rol': p.rol === 'lider' ? 'Líder' : 'Votante',
         'Cédula Líder': p.cedula_lider || '-',
         'Nombre Líder': p.lider?.nombre_completo || '-',
         'Teléfono': p.telefono || '-',
@@ -410,11 +410,11 @@ export default function Dashboard() {
             />
           )}
           <StatCard
-            title="Asociados"
-            value={stats.totalAsociados}
+            title="Votantes"
+            value={stats.totalVotantes}
             icon={UserCheck}
             variant="default"
-            description={isAdmin ? 'Total de asociados' : 'Tus asociados'}
+            description={isAdmin ? 'Total de Votantes' : 'Tus Votantes'}
           />
 
 
@@ -469,7 +469,7 @@ export default function Dashboard() {
           <div>
             <h2 className="text-xl font-display font-semibold mb-4 flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-primary" />
-              {isAdmin ? 'Resumen Asociados' : 'Mi Estado y Asociados'}
+              {isAdmin ? 'Resumen Votantes' : 'Mi Estado y Votantes'}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="stat-card border-l-4 border-l-warning">
@@ -478,8 +478,8 @@ export default function Dashboard() {
                     <Clock className="w-6 h-6 text-warning" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Asociados Pendientes</p>
-                    <p className="text-2xl font-bold font-display">{stats.asociados.pendientes}</p>
+                    <p className="text-sm text-muted-foreground">Votantes Pendientes</p>
+                    <p className="text-2xl font-bold font-display">{stats.Votantes.pendientes}</p>
                   </div>
                 </div>
               </div>
@@ -489,8 +489,8 @@ export default function Dashboard() {
                     <CheckCircle className="w-6 h-6 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Asociados Aprobados</p>
-                    <p className="text-2xl font-bold font-display">{stats.asociados.aprobados}</p>
+                    <p className="text-sm text-muted-foreground">Votantes Aprobados</p>
+                    <p className="text-2xl font-bold font-display">{stats.Votantes.aprobados}</p>
                   </div>
                 </div>
               </div>
@@ -500,8 +500,8 @@ export default function Dashboard() {
                     <XCircle className="w-6 h-6 text-destructive" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Asociados Rechazados</p>
-                    <p className="text-2xl font-bold font-display">{stats.asociados.rechazados}</p>
+                    <p className="text-sm text-muted-foreground">Votantes Rechazados</p>
+                    <p className="text-2xl font-bold font-display">{stats.Votantes.rechazados}</p>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -90,10 +90,10 @@ export function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
-    { path: '/asociados', icon: ClipboardList, label: 'Asociados', show: true },
+    { path: '/votantes', icon: ClipboardList, label: 'Votantes', show: true },
     { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
     { path: '/registrar-lider', icon: UserCog, label: 'Registrar Líder', show: isAdmin },
-    { path: '/registrar-asociado', icon: UserCheck, label: 'Registrar Asociado', show: true },
+    { path: '/registrar-votante', icon: UserCheck, label: 'Registrar Votante', show: true },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
     { path: '/territorio', icon: Map, label: 'Territorio Electoral', show: isAdmin },
     { path: '/chat', icon: MessageSquare, label: 'Chat', show: true },

@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+﻿import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,9 +8,9 @@ import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import Dashboard from "./pages/Dashboard";
 import Lideres from "./pages/Lideres";
-import Asociados from "./pages/Asociados";
+import Votantes from "./pages/Votantes";
 import RegistrarLider from "./pages/RegistrarLider";
-import RegistrarAsociado from "./pages/RegistrarAsociado";
+import RegistrarVotante from "./pages/RegistrarVotante";
 import Chat from "./pages/Chat";
 import TerritorioElectoral from "./pages/TerritorioElectoral";
 import NotFound from "./pages/NotFound";
@@ -46,9 +46,9 @@ const App = () => (
           <Route path="/registro" element={<Registro />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/lideres" element={<AdminRoute><Lideres /></AdminRoute>} />
-          <Route path="/asociados" element={<ProtectedRoute><Asociados /></ProtectedRoute>} />
+          <Route path="/votantes" element={<ProtectedRoute><Votantes /></ProtectedRoute>} />
           <Route path="/registrar-lider" element={<AdminRoute><RegistrarLider /></AdminRoute>} />
-          <Route path="/registrar-asociado" element={<ProtectedRoute><RegistrarAsociado /></ProtectedRoute>} />
+          <Route path="/registrar-votante" element={<ProtectedRoute><RegistrarVotante /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/territorio" element={<AdminRoute><TerritorioElectoral /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />

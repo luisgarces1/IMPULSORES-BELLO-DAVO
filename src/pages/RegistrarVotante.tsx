@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,10 +9,10 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 
 
 
-export default function RegistrarAsociado() {
+export default function RegistrarVotante() {
   const { cedula: cedulaLider, nombre, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [countAsociados, setCountAsociados] = useState<number | null>(null);
+  const [countVotantes, setCountVotantes] = useState<number | null>(null);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -70,7 +70,7 @@ export default function RegistrarAsociado() {
         .eq('cedula_lider', cedulaLider)
         .eq('rol', 'asociado');
 
-      setCountAsociados(count || 0);
+      setCountVotantes(count || 0);
     };
     checkCount();
   });
@@ -129,9 +129,16 @@ export default function RegistrarAsociado() {
     }
 
     // Determine effective leader
-    const effectiveLeader = isAdmin && formData.selectedLider ? formData.selectedLider : cedulaLider;
+    let effectiveLeader = isAdmin && formData.selectedLider ? formData.selectedLider : cedulaLider;
 
-    // Check max 60 asociados (Logic might need adjustment for Admin registering for others, but keeping as is for now or checking against effective leader?)
+    // Safety check: if effectiveLeader is 'admin' (the session ID for admin login), 
+    // we cannot use it as a foreign key because 'admin' does not exist in the personas table.
+    // In this case, we set it to null (no leader assigned).
+    if (effectiveLeader === 'admin') {
+      effectiveLeader = null;
+    }
+
+    // Check max 60 Votantes (Logic might need adjustment for Admin registering for others, but keeping as is for now or checking against effective leader?)
     //Ideally we should check the count for the *target* leader.
 
     // For now, let's skip the strict count check for admin or assume admin knows what they are doing, 
@@ -146,12 +153,12 @@ export default function RegistrarAsociado() {
         .eq('rol', 'asociado');
 
       if (count !== null && count >= 60) {
-        setError('El líder seleccionado ya tiene el máximo de 60 asociados');
+        setError('El líder seleccionado ya tiene el máximo de 60 Votantes');
         return;
       }
     } else {
-      if (countAsociados !== null && countAsociados >= 60) {
-        setError('Ya tienes el máximo de 60 asociados registrados');
+      if (countVotantes !== null && countVotantes >= 60) {
+        setError('Ya tienes el máximo de 60 Votantes registrados');
         return;
       }
     }
@@ -174,7 +181,7 @@ export default function RegistrarAsociado() {
         return;
       }
 
-      // Insert new asociado
+      // Insert new Votante
       // Calculate auto-status
       let calculateEstado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' = 'PENDIENTE';
       if (formData.municipio === 'No Se' || formData.municipio_puesto === 'No Se') {
@@ -199,7 +206,7 @@ export default function RegistrarAsociado() {
         mesa_votacion: formData.mesa_votacion || null,
         vota_en_bello: formData.municipio_puesto === 'Bello',
         estado: calculateEstado,
-        registrado_por: cedulaLider, // Always logged in user
+        registrado_por: cedulaLider === 'admin' ? null : cedulaLider, // Always logged in user, but null if admin
       });
 
       if (insertError) throw insertError;
@@ -207,9 +214,9 @@ export default function RegistrarAsociado() {
       setSuccess(true);
       setLastRegistered(formData);
       if (effectiveLeader === cedulaLider) {
-        setCountAsociados((prev) => (prev !== null ? prev + 1 : 1));
+        setCountVotantes((prev) => (prev !== null ? prev + 1 : 1));
       }
-      toast.success('¡Asociado registrado exitosamente!');
+      toast.success('¡Votante registrado exitosamente!');
 
       // Reset form keeping selected leader
       setFormData({
@@ -238,10 +245,10 @@ export default function RegistrarAsociado() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
-            Registrar Asociado
+            Registrar Votante
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Agrega un nuevo asociado a tu equipo ganador
+            Agrega un nuevo Votante a tu equipo ganador
           </p>
         </div>
 
@@ -252,13 +259,13 @@ export default function RegistrarAsociado() {
               <UserPlus className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground font-medium">Asociados registrados</p>
+              <p className="text-sm text-muted-foreground font-medium">Votantes registrados</p>
               <p className="text-2xl font-bold font-display text-foreground">
-                {countAsociados !== null ? `${countAsociados} / 60` : '0 / 60'}
+                {countVotantes !== null ? `${countVotantes} / 60` : '0 / 60'}
               </p>
             </div>
           </div>
-          {countAsociados !== null && countAsociados >= 60 ? (
+          {countVotantes !== null && countVotantes >= 60 ? (
             <span className="px-4 py-1.5 bg-destructive/10 text-destructive rounded-full text-xs font-bold uppercase tracking-wider">
               Límite alcanzado
             </span>
@@ -266,16 +273,16 @@ export default function RegistrarAsociado() {
         </div>
 
         {/* Invitation Card */}
-        {countAsociados === null || countAsociados < 60 ? (
+        {countVotantes === null || countVotantes < 60 ? (
           <div className="glass-panel p-6 mb-8 border-primary/20 bg-primary/5 rounded-2xl">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1 w-full">
                 <h2 className="text-xl font-display font-bold text-primary mb-2 flex items-center gap-2">
                   <Share2 className="w-5 h-5" />
-                  Invitar Nuevo Asociado
+                  Invitar Nuevo Votante
                 </h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Envía este enlace para que un nuevo asociado se registre él mismo en el sistema:
+                  Envía este enlace para que un nuevo Votante se registre él mismo en el sistema:
                 </p>
                 <div className="flex gap-2 p-3 bg-background border border-border rounded-xl font-mono text-xs overflow-x-auto w-full">
                   {`${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}`}
@@ -310,14 +317,14 @@ export default function RegistrarAsociado() {
 
         {/* Form */}
         <div className="bg-card rounded-2xl p-8 max-w-2xl shadow-sm border border-border">
-          {countAsociados !== null && countAsociados >= 60 ? (
+          {countVotantes !== null && countVotantes >= 60 ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-8 h-8 text-warning" />
               </div>
               <h3 className="text-xl font-display font-semibold mb-2">Límite Alcanzado</h3>
               <p className="text-muted-foreground">
-                Ya tienes registrados 60 asociados, que es el máximo permitido.
+                Ya tienes registrados 60 Votantes, que es el máximo permitido.
               </p>
             </div>
           ) : (
@@ -337,7 +344,7 @@ export default function RegistrarAsociado() {
               )}
               <div>
                 <label htmlFor="cedula" className="block text-sm font-medium mb-2">
-                  Cédula del Asociado <span className="text-destructive">*</span>
+                  Cédula del Votante <span className="text-destructive">*</span>
                 </label>
                 <input
                   id="cedula"
@@ -473,7 +480,7 @@ export default function RegistrarAsociado() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-4 bg-success/10 text-success rounded-lg">
                     <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                    <span>¡Asociado registrado exitosamente!</span>
+                    <span>¡Votante registrado exitosamente!</span>
                   </div>
 
                   <a
@@ -502,7 +509,7 @@ export default function RegistrarAsociado() {
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Registrar Asociado
+                    Registrar Votante
                     <ArrowRight className="w-4 h-4" />
                   </span>
                 )}

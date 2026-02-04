@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, Copy, Share2 } from 'lucide-react';
@@ -147,14 +147,14 @@ export default function Registro() {
       }
 
       // Insert new person
-      const isAsociado = !!liderId;
+      const isVotante = !!liderId;
       const { error: insertError } = await supabase.from('personas').insert({
         cedula: formData.cedula.trim(),
         nombre_completo: formData.nombre.trim(),
         telefono: formData.telefono.trim() || null,
         email: formData.email.trim() || null,
-        rol: isAsociado ? 'asociado' : 'lider',
-        cedula_lider: isAsociado ? liderId : formData.cedula.trim(),
+        rol: isVotante ? 'Votante' : 'lider',
+        cedula_lider: isVotante ? liderId : formData.cedula.trim(),
         lugar_votacion: formData.lugarVotacion,
         municipio_votacion: formData.municipio,
         municipio_puesto: formData.municipio_puesto || null,
@@ -162,7 +162,7 @@ export default function Registro() {
         mesa_votacion: formData.mesa_votacion || null,
         vota_en_bello: formData.municipio_puesto === 'Bello',
         estado: calculateEstado,
-        registrado_por: isAsociado ? liderId : formData.cedula.trim(),
+        registrado_por: isVotante ? liderId : formData.cedula.trim(),
       });
 
       if (insertError) throw insertError;
@@ -235,7 +235,7 @@ export default function Registro() {
               }}
               className="btn-secondary w-full"
             >
-              Inscribir más asociados
+              Inscribir más Votantes
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -328,7 +328,7 @@ export default function Registro() {
             <div>
               <h1 className="font-display font-bold">Impulsores Electorales</h1>
               <p className="text-xs text-muted-foreground">
-                {liderId ? 'Registro de Asociado' : 'Registro de Líder'}
+                {liderId ? 'Registro de Votante' : 'Registro de Líder'}
               </p>
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function Registro() {
       <main className="max-w-xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="mb-8">
           <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
-            {liderId ? 'Registrarse como Asociado' : 'Registrarse como Líder'}
+            {liderId ? 'Registrarse como Votante' : 'Registrarse como Líder'}
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
             {liderId

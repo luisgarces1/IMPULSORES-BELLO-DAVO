@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,13 +35,13 @@ export default function Lideres() {
 
       if (lideresError) throw lideresError;
 
-      const { data: asociadosData } = await supabase
+      const { data: VotantesData } = await supabase
         .from('personas')
         .select('*')
         .eq('rol', 'asociado');
 
       const lideresWithStats: LiderWithStats[] = (lideresData || []).map((lider: any) => {
-        const misAsociados = (asociadosData || []).filter(
+        const misVotantes = (VotantesData || []).filter(
           (a) => a.cedula_lider === lider.cedula
         );
         return {
@@ -50,9 +50,9 @@ export default function Lideres() {
           puesto_votacion: lider.puesto_votacion || null,
           mesa_votacion: lider.mesa_votacion || null,
           notas: lider.notas || null,
-          total_asociados: misAsociados.length,
-          votan_antioquia: misAsociados.filter((a) => a.lugar_votacion === 'Antioquia').length,
-          no_votan_antioquia: misAsociados.filter((a) => a.lugar_votacion !== 'Antioquia').length,
+          total_Votantes: misVotantes.length,
+          votan_antioquia: misVotantes.filter((a) => a.lugar_votacion === 'Antioquia').length,
+          no_votan_antioquia: misVotantes.filter((a) => a.lugar_votacion !== 'Antioquia').length,
         };
       });
 
@@ -141,7 +141,7 @@ export default function Lideres() {
       }
 
       toast.success(updatedLider.rol === 'asociado'
-        ? 'Líder cambiado a Asociado'
+        ? 'Líder cambiado a Votante'
         : 'Líder actualizado correctamente'
       );
 
@@ -246,9 +246,9 @@ export default function Lideres() {
                 <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Asociados Totales</p>
+                <p className="text-xs text-muted-foreground font-medium">Votantes Totales</p>
                 <p className="text-xl font-bold font-display">
-                  {lideres.reduce((acc, l) => acc + l.total_asociados, 0)}
+                  {lideres.reduce((acc, l) => acc + l.total_Votantes, 0)}
                 </p>
               </div>
             </div>
@@ -361,7 +361,7 @@ export default function Lideres() {
                 <div className="grid grid-cols-3 gap-2 p-4 bg-primary/5 rounded-xl mb-6">
                   <div className="text-center">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Equip</p>
-                    <p className="text-lg font-bold font-display text-primary">{lider.total_asociados}</p>
+                    <p className="text-lg font-bold font-display text-primary">{lider.total_Votantes}</p>
                   </div>
                   <div className="text-center border-x border-primary/10">
                     <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Antioq</p>

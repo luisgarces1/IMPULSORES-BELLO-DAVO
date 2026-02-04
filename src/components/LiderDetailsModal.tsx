@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
             const { data, error } = await supabase
                 .from('personas')
                 .select('*')
-                .eq('rol', 'asociado')
+                .eq('rol', 'Votante')
                 .eq('cedula_lider', liderCedula)
                 .order('nombre_completo', { ascending: true });
 
@@ -170,7 +170,7 @@ export function LiderDetailsModal({ lider, isOpen, onClose }: LiderDetailsModalP
                                 {associates.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
                                         <Users className="w-12 h-12 mb-4 opacity-20" />
-                                        <p className="text-lg">No tiene asociados registrados</p>
+                                        <p className="text-lg">No tiene Votantes registrados</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">

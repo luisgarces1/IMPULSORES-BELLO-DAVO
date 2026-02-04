@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/lib/auth';
@@ -9,20 +9,20 @@ import { SearchableSelect } from '@/components/SearchableSelect';
 import { Search, MapPin, Users, UserCheck, Clock, Pencil, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function Asociados() {
+export default function Votantes() {
   const { isAdmin, cedula } = useAuth();
-  const [asociados, setAsociados] = useState<Persona[]>([]);
+  const [Votantes, setVotantes] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState<EstadoRegistro | 'TODOS'>('TODOS');
   const [filterAntioquia, setFilterAntioquia] = useState<'TODOS' | 'SI' | 'NO'>('TODOS');
   const [filterLider, setFilterLider] = useState<string>('TODOS');
   const [lideres, setLideres] = useState<Persona[]>([]);
-  const [editingAsociado, setEditingAsociado] = useState<Persona | null>(null);
+  const [editingVotante, setEditingVotante] = useState<Persona | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchAsociados();
+    fetchVotantes();
     if (isAdmin) {
       fetchLideres();
     }
@@ -49,7 +49,7 @@ export default function Asociados() {
     }
   };
 
-  const fetchAsociados = async () => {
+  const fetchVotantes = async () => {
     setLoading(true);
     try {
       let query = supabase.from('personas').select('*, lider:cedula_lider(nombre_completo)').eq('rol', 'asociado');
@@ -62,7 +62,7 @@ export default function Asociados() {
 
       if (error) throw error;
 
-      const asociadosWithFields: Persona[] = (data || []).map((p: any) => ({
+      const VotantesWithFields: Persona[] = (data || []).map((p: any) => ({
         ...p,
         municipio_puesto: p.municipio_puesto || null,
         puesto_votacion: p.puesto_votacion || null,
@@ -70,10 +70,10 @@ export default function Asociados() {
         notas: p.notas || null,
       }));
 
-      setAsociados(asociadosWithFields);
+      setVotantes(VotantesWithFields);
     } catch (error) {
-      console.error('Error fetching asociados:', error);
-      toast.error('Error al cargar los asociados');
+      console.error('Error fetching Votantes:', error);
+      toast.error('Error al cargar los Votantes');
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export default function Asociados() {
 
       if (error) throw error;
 
-      setAsociados((prev) =>
+      setVotantes((prev) =>
         prev.map((p) =>
           p.cedula === personaCedula ? { ...p, estado: nuevoEstado } : p
         )
@@ -101,38 +101,38 @@ export default function Asociados() {
     }
   };
 
-  const handleSaveAsociado = async (updatedAsociado: Persona, assignedAssociateIds?: string[]) => {
+  const handleSaveVotante = async (updatedVotante: Persona, assignedAssociateIds?: string[]) => {
     try {
       // 1. Update the persona itself
       const { error } = await supabase
         .from('personas')
         .update({
-          nombre_completo: updatedAsociado.nombre_completo,
-          telefono: updatedAsociado.telefono,
-          email: updatedAsociado.email,
-          lugar_votacion: updatedAsociado.lugar_votacion,
-          municipio_votacion: updatedAsociado.municipio_votacion,
-          municipio_puesto: updatedAsociado.municipio_puesto,
-          puesto_votacion: updatedAsociado.puesto_votacion,
-          mesa_votacion: updatedAsociado.mesa_votacion,
-          cedula_lider: updatedAsociado.rol === 'lider' ? null : updatedAsociado.cedula_lider,
-          rol: updatedAsociado.rol,
-          estado: updatedAsociado.estado,
-          notas: updatedAsociado.notas,
+          nombre_completo: updatedVotante.nombre_completo,
+          telefono: updatedVotante.telefono,
+          email: updatedVotante.email,
+          lugar_votacion: updatedVotante.lugar_votacion,
+          municipio_votacion: updatedVotante.municipio_votacion,
+          municipio_puesto: updatedVotante.municipio_puesto,
+          puesto_votacion: updatedVotante.puesto_votacion,
+          mesa_votacion: updatedVotante.mesa_votacion,
+          cedula_lider: updatedVotante.rol === 'lider' ? null : updatedVotante.cedula_lider,
+          rol: updatedVotante.rol,
+          estado: updatedVotante.estado,
+          notas: updatedVotante.notas,
         })
-        .eq('cedula', updatedAsociado.cedula);
+        .eq('cedula', updatedVotante.cedula);
 
       if (error) throw error;
 
       // 2. If it's a leader now, handle associated assignments
-      if (updatedAsociado.rol === 'lider' && assignedAssociateIds) {
+      if (updatedVotante.rol === 'lider' && assignedAssociateIds) {
         // Reset current associations of this person (just in case they were already a leader)
         // For associate-to-leader case, this is just assigning new ones.
 
         // Block update: set cedula_lider of all selected associates
         await supabase
           .from('personas')
-          .update({ cedula_lider: updatedAsociado.cedula })
+          .update({ cedula_lider: updatedVotante.cedula })
           .in('cedula', assignedAssociateIds);
 
         // Any associate that was under this leader but not in the list should be unassigned
@@ -141,40 +141,40 @@ export default function Asociados() {
           await supabase
             .from('personas')
             .update({ cedula_lider: null })
-            .eq('cedula_lider', updatedAsociado.cedula)
+            .eq('cedula_lider', updatedVotante.cedula)
             .not('cedula', 'in', assignedAssociateIds);
         } else {
           await supabase
             .from('personas')
             .update({ cedula_lider: null })
-            .eq('cedula_lider', updatedAsociado.cedula);
+            .eq('cedula_lider', updatedVotante.cedula);
         }
       }
 
-      toast.success(updatedAsociado.rol === 'lider'
+      toast.success(updatedVotante.rol === 'lider'
         ? '¡Promovido a Líder y equipo asignado!'
-        : 'Asociado actualizado correctamente'
+        : 'Votante actualizado correctamente'
       );
 
       setIsEditModalOpen(false);
-      fetchAsociados(); // Refresh all to reflect role changes
+      fetchVotantes(); // Refresh all to reflect role changes
       if (isAdmin) fetchLideres();
     } catch (error) {
-      console.error('Error updating asociado:', error);
+      console.error('Error updating Votante:', error);
       toast.error('Error al actualizar el registro');
     }
   };
 
-  const filteredAsociados = asociados.filter((asociado) => {
+  const filteredVotantes = Votantes.filter((Votante) => {
     const matchesSearch =
-      asociado.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asociado.cedula.includes(searchTerm);
-    const matchesEstado = filterEstado === 'TODOS' || asociado.estado === filterEstado;
+      Votante.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      Votante.cedula.includes(searchTerm);
+    const matchesEstado = filterEstado === 'TODOS' || Votante.estado === filterEstado;
     const matchesAntioquia =
       filterAntioquia === 'TODOS' ||
-      (filterAntioquia === 'SI' && asociado.lugar_votacion === 'Antioquia') ||
-      (filterAntioquia === 'NO' && asociado.lugar_votacion !== 'Antioquia');
-    const matchesLider = filterLider === 'TODOS' || asociado.cedula_lider === filterLider;
+      (filterAntioquia === 'SI' && Votante.lugar_votacion === 'Antioquia') ||
+      (filterAntioquia === 'NO' && Votante.lugar_votacion !== 'Antioquia');
+    const matchesLider = filterLider === 'TODOS' || Votante.cedula_lider === filterLider;
 
     return matchesSearch && matchesEstado && matchesAntioquia && matchesLider;
   });
@@ -185,7 +185,7 @@ export default function Asociados() {
         <div className="p-4 md:p-8 flex items-center justify-center h-[80vh]">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <p className="text-muted-foreground">Cargando asociados...</p>
+            <p className="text-muted-foreground">Cargando Votantes...</p>
           </div>
         </div>
       </Layout>
@@ -198,12 +198,12 @@ export default function Asociados() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
-            {isAdmin ? 'Todos los Asociados' : 'Mis Asociados'}
+            {isAdmin ? 'Todos los Votantes' : 'Mis Votantes'}
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
             {isAdmin
-              ? 'Gestiona todos los asociados registrados en el sistema'
-              : 'Visualiza y gestiona tu equipo de asociados'}
+              ? 'Gestiona todos los Votantes registrados en el sistema'
+              : 'Visualiza y gestiona tu equipo de Votantes'}
           </p>
         </div>
 
@@ -216,7 +216,7 @@ export default function Asociados() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Total</p>
-                <p className="text-xl font-bold font-display">{asociados.length}</p>
+                <p className="text-xl font-bold font-display">{Votantes.length}</p>
               </div>
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function Asociados() {
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Aprobados</p>
                 <p className="text-xl font-bold font-display">
-                  {asociados.filter((a) => a.estado === 'APROBADO').length}
+                  {Votantes.filter((a) => a.estado === 'APROBADO').length}
                 </p>
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function Asociados() {
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Pendientes</p>
                 <p className="text-xl font-bold font-display">
-                  {asociados.filter((a) => a.estado === 'PENDIENTE').length}
+                  {Votantes.filter((a) => a.estado === 'PENDIENTE').length}
                 </p>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function Asociados() {
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Rechazados</p>
                 <p className="text-xl font-bold font-display">
-                  {asociados.filter((a) => a.estado === 'RECHAZADO').length}
+                  {Votantes.filter((a) => a.estado === 'RECHAZADO').length}
                 </p>
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function Asociados() {
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Votan Antioquia</p>
                 <p className="text-xl font-bold font-display">
-                  {asociados.filter((a) => a.lugar_votacion === 'Antioquia').length}
+                  {Votantes.filter((a) => a.lugar_votacion === 'Antioquia').length}
                 </p>
               </div>
             </div>
@@ -350,45 +350,45 @@ export default function Asociados() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAsociados.length === 0 ? (
+                {filteredVotantes.length === 0 ? (
                   <tr>
                     <td
                       colSpan={13}
                       className="py-12 text-center text-muted-foreground"
                     >
-                      No se encontraron asociados
+                      No se encontraron Votantes
                     </td>
                   </tr>
                 ) : (
-                  filteredAsociados.map((asociado) => (
+                  filteredVotantes.map((Votante) => (
                     <tr
-                      key={asociado.cedula}
+                      key={Votante.cedula}
                       className="border-b border-border/50 hover:bg-muted/10 transition-colors"
                     >
                       <td className="py-4 pl-4 pr-0 w-[50px]">
                         <button
                           onClick={() => {
-                            setEditingAsociado(asociado);
+                            setEditingVotante(Votante);
                             setIsEditModalOpen(true);
                           }}
                           className="p-1.5 hover:bg-muted rounded-md transition-colors"
-                          title="Editar Asociado"
+                          title="Editar Votante"
                         >
                           <Pencil className="w-4 h-4 text-muted-foreground hover:text-primary" />
                         </button>
                       </td>
-                      <td className="py-4 px-6 font-medium">{asociado.nombre_completo}</td>
-                      <td className="py-4 px-6 text-muted-foreground">{asociado.cedula}</td>
+                      <td className="py-4 px-6 font-medium">{Votante.nombre_completo}</td>
+                      <td className="py-4 px-6 text-muted-foreground">{Votante.cedula}</td>
                       <td className="py-4 px-6 text-center">
-                        <StatusBadge estado={asociado.estado} />
+                        <StatusBadge estado={Votante.estado} />
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {asociado.telefono ? (
+                        {Votante.telefono ? (
                           <div className="flex items-center gap-2">
                             <svg viewBox="0 0 24 24" className="w-4 h-4 text-green-500 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
                             <a
-                              href={`https://wa.me/57${asociado.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent(
-                                asociado.rol === 'lider'
+                              href={`https://wa.me/57${Votante.telefono.replace(/[\s-]/g, '')}?text=${encodeURIComponent(
+                                Votante.rol === 'lider'
                                   ? 'Hola, soy el coordinador electoral, ¿cómo vas con la inscripción de tus colaboradores?'
                                   : 'Hola, soy el coordinador electoral, nos encanta tu apoyo a este proyecto, sigue invitando amigos a este equipo ganador. Mil gracias.'
                               )}`}
@@ -396,7 +396,7 @@ export default function Asociados() {
                               rel="noopener noreferrer"
                               className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
                             >
-                              {asociado.telefono}
+                              {Votante.telefono}
                             </a>
                           </div>
                         ) : (
@@ -404,33 +404,33 @@ export default function Asociados() {
                         )}
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {asociado.email || '-'}
+                        {Votante.email || '-'}
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {asociado.lider?.nombre_completo || asociado.cedula_lider || '-'}
+                        {Votante.lider?.nombre_completo || Votante.cedula_lider || '-'}
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {asociado.municipio_votacion || '-'}
+                        {Votante.municipio_votacion || '-'}
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm font-medium">
-                        {asociado.municipio_puesto || '-'}
+                        {Votante.municipio_puesto || '-'}
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm">
-                        {asociado.puesto_votacion || '-'}
+                        {Votante.puesto_votacion || '-'}
                       </td>
                       <td className="py-4 px-6 text-muted-foreground text-sm text-center">
-                        {asociado.mesa_votacion || '-'}
+                        {Votante.mesa_votacion || '-'}
                       </td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm max-w-[200px] truncate" title={asociado.notas || ''}>
-                        {asociado.notas || '-'}
+                      <td className="py-4 px-6 text-muted-foreground text-sm max-w-[200px] truncate" title={Votante.notas || ''}>
+                        {Votante.notas || '-'}
                       </td>
                       <td className="py-4 px-6 text-center">
                         <div className="flex items-center justify-center gap-2">
                           {isAdmin && (
                             <select
-                              value={asociado.estado}
+                              value={Votante.estado}
                               onChange={(e) =>
-                                updateEstado(asociado.cedula, e.target.value as EstadoRegistro)
+                                updateEstado(Votante.cedula, e.target.value as EstadoRegistro)
                               }
                               className="text-xs px-2 py-1 bg-background border border-border rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
                             >
@@ -441,11 +441,11 @@ export default function Asociados() {
                           )}
                           <button
                             onClick={() => {
-                              setEditingAsociado(asociado);
+                              setEditingVotante(Votante);
                               setIsEditModalOpen(true);
                             }}
                             className="p-1.5 hover:bg-muted rounded-md transition-colors invisible"
-                            title="Editar Asociado"
+                            title="Editar Votante"
                           >
                             <Pencil className="w-4 h-4 text-muted-foreground" />
                           </button>
@@ -460,13 +460,13 @@ export default function Asociados() {
         </div>
 
         <EditPersonaModal
-          person={editingAsociado}
+          person={editingVotante}
           isOpen={isEditModalOpen}
           onClose={() => {
             setIsEditModalOpen(false);
-            setEditingAsociado(null);
+            setEditingVotante(null);
           }}
-          onSave={handleSaveAsociado}
+          onSave={handleSaveVotante}
           lideres={lideres}
         />
 

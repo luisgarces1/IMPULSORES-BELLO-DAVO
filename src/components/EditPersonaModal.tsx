@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -150,7 +150,7 @@ export function EditPersonaModal({
                 return prev.filter(id => id !== cedula);
             } else {
                 if (prev.length >= 60) {
-                    toast.error("Un líder no puede tener más de 60 asociados");
+                    toast.error("Un líder no puede tener más de 60 Votantes");
                     return prev;
                 }
                 return [...prev, cedula];
@@ -193,7 +193,7 @@ export function EditPersonaModal({
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Editar {formData.rol === 'asociado' ? 'Asociado' : 'Líder'}</DialogTitle>
+                    <DialogTitle>Editar {formData.rol === 'asociado' ? 'Votante' : 'Líder'}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -215,7 +215,7 @@ export function EditPersonaModal({
                                     <SelectValue placeholder="Seleccionar rol" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="asociado">Asociado</SelectItem>
+                                    <SelectItem value="asociado">Votante</SelectItem>
                                     <SelectItem value="lider">Líder</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -346,7 +346,7 @@ export function EditPersonaModal({
                     ) : (
                         <div className="grid gap-2 border-t pt-4 mt-2">
                             <div className="flex justify-between items-center">
-                                <Label className="text-primary font-bold">Asignar Asociados a este Líder</Label>
+                                <Label className="text-primary font-bold">Asignar Votantes a este Líder</Label>
                                 <span className={`text-xs font-bold ${selectedAssociateIds.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
                                     {selectedAssociateIds.length} / 60
                                 </span>
@@ -354,7 +354,7 @@ export function EditPersonaModal({
                             <div className="relative mb-2">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar asociados..."
+                                    placeholder="Buscar Votantes..."
                                     className="pl-8"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -368,7 +368,7 @@ export function EditPersonaModal({
                             ) : (
                                 <div className="grid gap-2 max-h-[200px] overflow-y-auto border rounded-md p-2 bg-muted/20">
                                     {filteredAssociates.length === 0 ? (
-                                        <p className="text-xs text-center p-4 text-muted-foreground">No se encontraron asociados disponibles</p>
+                                        <p className="text-xs text-center p-4 text-muted-foreground">No se encontraron Votantes disponibles</p>
                                     ) : (
                                         filteredAssociates.map((associate) => (
                                             <div key={associate.cedula} className="flex items-center space-x-2 p-1 hover:bg-background rounded transition-colors">
