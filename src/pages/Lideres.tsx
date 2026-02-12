@@ -101,6 +101,7 @@ export default function Lideres() {
           municipio_puesto: updatedLider.municipio_puesto,
           puesto_votacion: updatedLider.puesto_votacion,
           mesa_votacion: updatedLider.mesa_votacion,
+          votos_prometidos: updatedLider.votos_prometidos,
           rol: updatedLider.rol,
           estado: updatedLider.estado,
           notas: updatedLider.notas,
@@ -141,7 +142,7 @@ export default function Lideres() {
       }
 
       toast.success(updatedLider.rol === 'asociado'
-        ? 'Líder cambiado a Votante'
+        ? 'Líder cambiado a Amigo que apoya'
         : 'Líder actualizado correctamente'
       );
 
@@ -246,7 +247,7 @@ export default function Lideres() {
                 <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Votantes Totales</p>
+                <p className="text-xs text-muted-foreground font-medium">Amigos Totales</p>
                 <p className="text-xl font-bold font-display">
                   {lideres.reduce((acc, l) => acc + l.total_Votantes, 0)}
                 </p>

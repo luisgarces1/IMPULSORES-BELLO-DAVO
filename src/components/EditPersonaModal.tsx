@@ -150,7 +150,7 @@ export function EditPersonaModal({
                 return prev.filter(id => id !== cedula);
             } else {
                 if (prev.length >= 60) {
-                    toast.error("Un líder no puede tener más de 60 Votantes");
+                    toast.error("Un líder no puede tener más de 60 Amigos");
                     return prev;
                 }
                 return [...prev, cedula];
@@ -193,7 +193,7 @@ export function EditPersonaModal({
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Editar {formData.rol === 'asociado' ? 'Votante' : 'Líder'}</DialogTitle>
+                    <DialogTitle>Editar {formData.rol === 'asociado' ? 'Amigo que apoya' : formData.rol === 'impulsor' ? 'Impulsor Electoral' : 'Líder'}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -215,7 +215,8 @@ export function EditPersonaModal({
                                     <SelectValue placeholder="Seleccionar rol" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="asociado">Votante</SelectItem>
+                                    <SelectItem value="asociado">Amigo que apoya</SelectItem>
+                                    <SelectItem value="impulsor">Impulsor Electoral</SelectItem>
                                     <SelectItem value="lider">Líder</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -313,6 +314,20 @@ export function EditPersonaModal({
                                 disabled={!formData.municipio_puesto}
                             />
                         </div>
+                        <div className="grid gap-2 text-center flex flex-col items-center">
+                            <Label htmlFor="votos_prometidos" className="text-xs font-bold uppercase text-primary">¿CON CUANTO VOTOS AYUDA?</Label>
+                            <Input
+                                id="votos_prometidos"
+                                type="number"
+                                value={formData.votos_prometidos || ""}
+                                onChange={(e) => handleChange("votos_prometidos", e.target.value)}
+                                placeholder="Ej: 10"
+                                className="text-center font-bold text-lg"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 pb-2">
                         <div className="grid gap-2">
                             <Label htmlFor="mesa_votacion" className="text-xs font-bold uppercase text-muted-foreground">Mesa</Label>
                             <Input
@@ -346,7 +361,7 @@ export function EditPersonaModal({
                     ) : (
                         <div className="grid gap-2 border-t pt-4 mt-2">
                             <div className="flex justify-between items-center">
-                                <Label className="text-primary font-bold">Asignar Votantes a este Líder</Label>
+                                <Label className="text-primary font-bold">Asignar Amigos a este Líder</Label>
                                 <span className={`text-xs font-bold ${selectedAssociateIds.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
                                     {selectedAssociateIds.length} / 60
                                 </span>
@@ -354,7 +369,7 @@ export function EditPersonaModal({
                             <div className="relative mb-2">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar Votantes..."
+                                    placeholder="Buscar amigos..."
                                     className="pl-8"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -368,7 +383,7 @@ export function EditPersonaModal({
                             ) : (
                                 <div className="grid gap-2 max-h-[200px] overflow-y-auto border rounded-md p-2 bg-muted/20">
                                     {filteredAssociates.length === 0 ? (
-                                        <p className="text-xs text-center p-4 text-muted-foreground">No se encontraron Votantes disponibles</p>
+                                        <p className="text-xs text-center p-4 text-muted-foreground">No se encontraron amigos disponibles</p>
                                     ) : (
                                         filteredAssociates.map((associate) => (
                                             <div key={associate.cedula} className="flex items-center space-x-2 p-1 hover:bg-background rounded transition-colors">

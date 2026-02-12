@@ -145,7 +145,7 @@ export type Database = {
     }
     Enums: {
       estado_registro: "PENDIENTE" | "APROBADO" | "RECHAZADO"
-      user_role: "lider" | "asociado" | "admin"
+      user_role: "lider" | "asociado" | "admin" | "impulsor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -274,7 +274,7 @@ export const Constants = {
   public: {
     Enums: {
       estado_registro: ["PENDIENTE", "APROBADO", "RECHAZADO"],
-      user_role: ["lider", "asociado", "admin"],
+      user_role: ["lider", "asociado", "admin", "impulsor"],
     },
   },
 } as const

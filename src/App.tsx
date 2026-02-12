@@ -12,7 +12,8 @@ import Votantes from "./pages/Votantes";
 import RegistrarLider from "./pages/RegistrarLider";
 import RegistrarVotante from "./pages/RegistrarVotante";
 import Chat from "./pages/Chat";
-import TerritorioElectoral from "./pages/TerritorioElectoral";
+import Impulsores from "./pages/Impulsores";
+import RegistrarImpulsor from "./pages/RegistrarImpulsor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,7 +51,8 @@ const App = () => (
           <Route path="/registrar-lider" element={<AdminRoute><RegistrarLider /></AdminRoute>} />
           <Route path="/registrar-votante" element={<ProtectedRoute><RegistrarVotante /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/territorio" element={<AdminRoute><TerritorioElectoral /></AdminRoute>} />
+          <Route path="/impulsores" element={<ProtectedRoute><Impulsores /></ProtectedRoute>} />
+          <Route path="/registrar-impulsor" element={<ProtectedRoute><RegistrarImpulsor /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

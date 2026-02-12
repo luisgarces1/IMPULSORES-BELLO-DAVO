@@ -16,18 +16,24 @@ export default function Registro() {
     nombre: '',
     telefono: '',
     email: '',
-    lugarVotacion: 'Antioquia',
     municipio: '',
     municipio_puesto: '',
     puesto_votacion: '',
     mesa_votacion: '',
+    votos_prometidos: '',
   });
   const [liderId, setLiderId] = useState<string | null>(null);
   const [liderNombre, setLiderNombre] = useState<string | null>(null);
+  const [roleParam, setRoleParam] = useState<'asociado' | 'impulsor'>('asociado');
 
   useState(() => {
     const params = new URLSearchParams(window.location.search);
     const identifier = params.get('lider');
+    const roleRequested = params.get('rol');
+
+    if (roleRequested === 'impulsor') {
+      setRoleParam('impulsor');
+    }
 
     if (identifier) {
       const fetchLider = async (val: string) => {
@@ -109,8 +115,8 @@ export default function Registro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion || !formData.municipio || !formData.telefono || !formData.municipio_puesto) {
-      setError('Por favor completa todos los campos requeridos (incluyendo Municipio de Votación)');
+    if (!formData.cedula || !formData.nombre || !formData.municipio || !formData.telefono || !formData.municipio_puesto || (liderId && !formData.votos_prometidos)) {
+      setError('Por favor completa todos los campos requeridos (incluyendo Municipio de Votación y cantidad de votos)');
       return;
     }
 
@@ -147,22 +153,23 @@ export default function Registro() {
       }
 
       // Insert new person
-      const isVotante = !!liderId;
+      const isUnderLider = !!liderId;
       const { error: insertError } = await supabase.from('personas').insert({
         cedula: formData.cedula.trim(),
         nombre_completo: formData.nombre.trim(),
         telefono: formData.telefono.trim() || null,
         email: formData.email.trim() || null,
-        rol: isVotante ? 'Votante' : 'lider',
-        cedula_lider: isVotante ? liderId : formData.cedula.trim(),
-        lugar_votacion: formData.lugarVotacion,
+        rol: isUnderLider ? roleParam : 'lider',
+        cedula_lider: isUnderLider ? liderId : formData.cedula.trim(),
+        lugar_votacion: 'Antioquia',
         municipio_votacion: formData.municipio,
         municipio_puesto: formData.municipio_puesto || null,
         puesto_votacion: formData.puesto_votacion || null,
         mesa_votacion: formData.mesa_votacion || null,
+        votos_prometidos: parseInt(formData.votos_prometidos) || 0,
         vota_en_bello: formData.municipio_puesto === 'Bello',
         estado: calculateEstado,
-        registrado_por: isVotante ? liderId : formData.cedula.trim(),
+        registrado_por: isUnderLider ? liderId : formData.cedula.trim(),
       });
 
       if (insertError) throw insertError;
@@ -208,7 +215,8 @@ export default function Registro() {
 
               <button
                 onClick={() => {
-                  const text = `¡Hola! Soy ${formData.nombre}, te invito a unirte al equipo GANADOR de la campaña a la cámara XXXXX de parte del líder ${liderNombre}. Regístrate aquí: ${window.location.origin}/registro?lider=${encodeURIComponent(liderNombre || '')}`;
+                  const label = roleParam === 'impulsor' ? 'impulsor electoral' : 'Amigo que apoya';
+                  const text = `¡Hola! Soy ${formData.nombre}, te invito a unirte al equipo GANADOR de parte del líder ${liderNombre} como ${label}. Regístrate aquí: ${window.location.origin}/registro?lider=${encodeURIComponent(liderNombre || '')}${roleParam === 'impulsor' ? '&rol=impulsor' : ''}`;
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                 }}
                 className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white px-4 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
@@ -226,16 +234,16 @@ export default function Registro() {
                   nombre: '',
                   telefono: '',
                   email: '',
-                  lugarVotacion: 'Antioquia',
                   municipio: '',
                   municipio_puesto: '',
                   puesto_votacion: '',
                   mesa_votacion: '',
+                  votos_prometidos: '',
                 });
               }}
               className="btn-secondary w-full"
             >
-              Inscribir más Votantes
+              Inscribir más Amigos
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -328,7 +336,7 @@ export default function Registro() {
             <div>
               <h1 className="font-display font-bold">Impulsores Electorales</h1>
               <p className="text-xs text-muted-foreground">
-                {liderId ? 'Registro de Votante' : 'Registro de Líder'}
+                {liderId ? (roleParam === 'impulsor' ? 'Registro de Impulsor' : 'Registro de Amigo') : 'Registro de Líder'}
               </p>
             </div>
           </div>
@@ -339,7 +347,7 @@ export default function Registro() {
       <main className="max-w-xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <div className="mb-8">
           <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
-            {liderId ? 'Registrarse como Votante' : 'Registrarse como Líder'}
+            {liderId ? (roleParam === 'impulsor' ? 'Registrarse como Impulsor Electoral' : 'Registrarse como Amigo que apoya') : 'Registrarse como Líder'}
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
             {liderId
@@ -459,19 +467,40 @@ export default function Registro() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="mesa_votacion" className="block text-sm font-medium mb-2">
-              Mesa de Votación
-            </label>
-            <input
-              id="mesa_votacion"
-              name="mesa_votacion"
-              type="text"
-              value={formData.mesa_votacion}
-              onChange={handleChange}
-              placeholder="Ej: 5"
-              className="input-field"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="mesa_votacion" className="block text-sm font-medium mb-2">
+                Mesa de Votación
+              </label>
+              <input
+                id="mesa_votacion"
+                name="mesa_votacion"
+                type="text"
+                value={formData.mesa_votacion}
+                onChange={handleChange}
+                placeholder="Ej: 5"
+                className="input-field"
+              />
+            </div>
+
+            {liderId && (
+              <div>
+                <label htmlFor="votos_prometidos" className="block text-sm font-medium mb-2">
+                  ¿CON CUANTO VOTOS AYUDA? <span className="text-destructive">*</span>
+                </label>
+                <input
+                  id="votos_prometidos"
+                  name="votos_prometidos"
+                  type="number"
+                  min="1"
+                  value={formData.votos_prometidos}
+                  onChange={handleChange}
+                  placeholder="Ej: 10"
+                  className="input-field"
+                  required
+                />
+              </div>
+            )}
           </div>
 
 

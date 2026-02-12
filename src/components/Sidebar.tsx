@@ -15,7 +15,8 @@ import {
   Download,
   Map,
   UserCog,
-  UserCheck
+  UserCheck,
+  Zap,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -90,12 +91,13 @@ export function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
-    { path: '/votantes', icon: ClipboardList, label: 'Votantes', show: true },
-    { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
-    { path: '/registrar-lider', icon: UserCog, label: 'Registrar Líder', show: isAdmin },
-    { path: '/registrar-votante', icon: UserCheck, label: 'Registrar Votante', show: true },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
-    { path: '/territorio', icon: Map, label: 'Territorio Electoral', show: isAdmin },
+    { path: '/lideres', icon: Users, label: 'Líderes', show: isAdmin },
+    { path: '/impulsores', icon: Zap, label: 'Impulsores Electorales', show: true },
+    { path: '/votantes', icon: ClipboardList, label: 'Amigos que apoyan', show: true },
+    { path: '/registrar-lider', icon: UserCog, label: 'Registrar Líder', show: isAdmin },
+    { path: '/registrar-impulsor', icon: UserPlus, label: 'Registrar Impulsor', show: true },
+    { path: '/registrar-votante', icon: UserCheck, label: 'Registrar Amigo', show: true },
     { path: '/chat', icon: MessageSquare, label: 'Chat', show: true },
   ];
 
@@ -109,7 +111,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="font-display font-bold text-sidebar-foreground text-lg">
-              Impulsores Electorales
+              Líderes
             </h1>
 
           </div>

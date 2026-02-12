@@ -4,8 +4,10 @@ import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
+import MapaAntioquia from '@/components/MapaAntioquia';
 import { DashboardStats, Persona } from '@/types/database';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   UserCheck,
@@ -15,14 +17,28 @@ import {
   XCircle,
   TrendingUp,
   Download,
+  Upload,
   MessageSquare,
   Search,
   Filter,
   Share2,
   Copy,
+  ChevronRight,
+  Map,
+  Edit,
+  Pencil,
+  Zap,
+  UserCog,
 } from 'lucide-react';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { MUNICIPIOS_ANTIOQUIA } from '@/constants/locations';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { EditPersonaModal } from '@/components/EditPersonaModal';
 import * as XLSX from 'xlsx';
 import {
   PieChart,
@@ -52,6 +68,7 @@ const CHART_COLORS = [
 
 export default function Dashboard() {
   const { isAdmin, cedula, nombre } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalLideres: 0,
     totalVotantes: 0,
@@ -63,8 +80,13 @@ export default function Dashboard() {
   const [recentPersonas, setRecentPersonas] = useState<Persona[]>([]);
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedMunForPuestos, setSelectedMunForPuestos] = useState<string | null>(null);
+  const [selectedPuestoDetails, setSelectedPuestoDetails] = useState<{
+    municipio: string;
+    puesto: string;
+    personas: Persona[];
+  } | null>(null);
+  const [editingPersona, setEditingPersona] = useState<Persona | null>(null);
 
   // MEDICIÓN PRINCIPAL: Municipio donde votan (Sincronizado con estados)
   const municipalityData = allPersonas.reduce((acc: any, curr) => {
@@ -112,6 +134,31 @@ export default function Dashboard() {
       .sort((a: any, b: any) => b.value - a.value)
     : [];
 
+  // TERRITORIO DATA (Full list for Map)
+  const mapMunicipiosData = allPersonas.reduce((acc: any[], curr) => {
+    const mun = curr.municipio_puesto || 'No definido';
+    const existing = acc.find((item: any) => item.name === mun);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      acc.push({ name: mun, count: 1, percentage: 0 });
+    }
+    return acc;
+  }, [])
+    .map(m => ({
+      ...m,
+      percentage: allPersonas.length > 0 ? (m.count / allPersonas.length) * 100 : 0
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const getColorByCount = (count: number): string => {
+    if (count > 30) return '#059669';
+    if (count >= 15) return '#10b981';
+    if (count >= 5) return '#34d399';
+    if (count >= 1) return '#a7f3d0';
+    return '#f3f4f6';
+  };
+
   useEffect(() => {
     fetchData();
   }, [isAdmin, cedula]);
@@ -127,22 +174,28 @@ export default function Dashboard() {
 
         if (personas) {
           const lideres = personas.filter((p) => p.rol === 'lider');
-          const Votantes = personas.filter((p) => p.rol === 'asociado');
+          const Amigos = personas.filter((p) => p.rol === 'asociado');
+          const Impulsores = personas.filter((p) => p.rol === 'impulsor');
 
           setStats({
             totalLideres: lideres.length,
-            totalVotantes: Votantes.length,
+            totalVotantes: Amigos.length,
+            totalImpulsores: Impulsores.length,
             votanEnAntioquia: personas.filter((p) => p.lugar_votacion === 'Antioquia').length,
-            noVotanAntioquia: personas.filter((p) => p.lugar_votacion !== 'Antioquia').length,
             lideres: {
               pendientes: lideres.filter((l) => l.estado === 'PENDIENTE').length,
               aprobados: lideres.filter((l) => l.estado === 'APROBADO').length,
               rechazados: lideres.filter((l) => l.estado === 'RECHAZADO').length,
             },
             Votantes: {
-              pendientes: Votantes.filter((a) => a.estado === 'PENDIENTE').length,
-              aprobados: Votantes.filter((a) => a.estado === 'APROBADO').length,
-              rechazados: Votantes.filter((a) => a.estado === 'RECHAZADO').length,
+              pendientes: Amigos.filter((a) => a.estado === 'PENDIENTE').length,
+              aprobados: Amigos.filter((a) => a.estado === 'APROBADO').length,
+              rechazados: Amigos.filter((a) => a.estado === 'RECHAZADO').length,
+            },
+            impulsores: {
+              pendientes: Impulsores.filter((i) => i.estado === 'PENDIENTE').length,
+              aprobados: Impulsores.filter((i) => i.estado === 'APROBADO').length,
+              rechazados: Impulsores.filter((i) => i.estado === 'RECHAZADO').length,
             },
           });
 
@@ -169,6 +222,12 @@ export default function Dashboard() {
           .eq('cedula_lider', cedula)
           .eq('rol', 'asociado');
 
+        const { data: misImpulsores } = await supabase
+          .from('personas')
+          .select('*')
+          .eq('cedula_lider', cedula)
+          .eq('rol', 'impulsor');
+
         const { data: miInfo } = await supabase
           .from('personas')
           .select('*')
@@ -179,8 +238,8 @@ export default function Dashboard() {
           setStats({
             totalLideres: 1,
             totalVotantes: misVotantes.length,
+            totalImpulsores: misImpulsores ? misImpulsores.length : 0,
             votanEnAntioquia: misVotantes.filter((p) => p.lugar_votacion === 'Antioquia').length,
-            noVotanAntioquia: misVotantes.filter((p) => p.lugar_votacion !== 'Antioquia').length,
             lideres: {
               pendientes: miInfo.estado === 'PENDIENTE' ? 1 : 0,
               aprobados: miInfo.estado === 'APROBADO' ? 1 : 0,
@@ -191,6 +250,11 @@ export default function Dashboard() {
               aprobados: misVotantes.filter((p) => p.estado === 'APROBADO').length,
               rechazados: misVotantes.filter((p) => p.estado === 'RECHAZADO').length,
             },
+            impulsores: {
+              pendientes: (misImpulsores || []).filter((i) => i.estado === 'PENDIENTE').length,
+              aprobados: (misImpulsores || []).filter((i) => i.estado === 'APROBADO').length,
+              rechazados: (misImpulsores || []).filter((i) => i.estado === 'RECHAZADO').length,
+            }
           });
 
           const mappedInfo: Persona = {
@@ -209,8 +273,16 @@ export default function Dashboard() {
             notas: p.notas || null,
           }));
 
-          setRecentPersonas([mappedInfo, ...mappedVotantes]);
-          setAllPersonas([mappedInfo, ...mappedVotantes]);
+          const mappedImpulsores: Persona[] = (misImpulsores || []).map((p: any) => ({
+            ...p,
+            municipio_puesto: p.municipio_puesto || null,
+            puesto_votacion: p.puesto_votacion || null,
+            mesa_votacion: p.mesa_votacion || null,
+            notas: p.notas || null,
+          }));
+
+          setRecentPersonas([mappedInfo, ...mappedVotantes, ...mappedImpulsores]);
+          setAllPersonas([mappedInfo, ...mappedVotantes, ...mappedImpulsores]);
         }
       }
     } catch (error) {
@@ -247,7 +319,7 @@ export default function Dashboard() {
       const formattedData = dataToExport.map(p => ({
         'Nombre Completo': p.nombre_completo,
         'Cédula': p.cedula,
-        'Rol': p.rol === 'lider' ? 'Líder' : 'Votante',
+        'Rol': p.rol === 'lider' ? 'Líder' : p.rol === 'asociado' ? 'Amigo que apoya' : 'Impulsor Electoral',
         'Cédula Líder': p.cedula_lider || '-',
         'Nombre Líder': p.lider?.nombre_completo || '-',
         'Teléfono': p.telefono || '-',
@@ -256,6 +328,7 @@ export default function Dashboard() {
         'Municipio de Votación': p.municipio_puesto || '-',
         'Puesto de Votación': p.puesto_votacion || '-',
         'Mesa': p.mesa_votacion || '-',
+        'Votos': p.votos_prometidos || 0,
         'Estado': p.estado,
         'Fecha Registro': p.fecha_registro ? new Date(p.fecha_registro).toLocaleDateString() : '-',
         'Notas': p.notas || '-'
@@ -272,6 +345,60 @@ export default function Dashboard() {
       console.error('Error exporting to Excel:', error);
       toast.error('Error al generar el reporte Excel');
     }
+  };
+
+  const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (jsonData.length === 0) {
+        toast.error('El archivo Excel está vacío');
+        return;
+      }
+
+      toast.loading(`Cargando ${jsonData.length} registros...`, { id: 'import-loading' });
+
+      try {
+        const personasToInsert = jsonData.map((row: any) => ({
+          cedula: String(row['Cédula'] || row['cedula'] || '').trim(),
+          nombre_completo: String(row['Nombre Completo'] || row['nombre'] || '').trim(),
+          telefono: String(row['Teléfono'] || row['telefono'] || '').trim(),
+          email: String(row['Email'] || row['email'] || '').trim(),
+          rol: (String(row['Rol'] || row['rol'] || '').toLowerCase().includes('lider') ? 'lider' : 'asociado'),
+          cedula_lider: String(row['Cédula Líder'] || row['cedula_lider'] || '').trim() || null,
+          municipio_votacion: String(row['Municipio donde vive'] || row['municipio_vive'] || '').trim(),
+          municipio_puesto: String(row['Municipio de Votación'] || row['municipio_votacion'] || '').trim(),
+          puesto_votacion: String(row['Puesto de Votación'] || row['puesto'] || '').trim(),
+          mesa_votacion: String(row['Mesa'] || row['mesa'] || '').trim(),
+          votos_prometidos: Number(row['Votos'] || row['votos'] || 0),
+          estado: 'APROBADO', // Auto approve mass loads by default or keep as pending? Typically mass loads are trusted.
+          notas: String(row['Notas'] || row['notas'] || '').trim(),
+        })).filter(p => p.cedula && p.nombre_completo);
+
+        const { error } = await supabase
+          .from('personas')
+          .upsert(personasToInsert, { onConflict: 'cedula' });
+
+        if (error) throw error;
+
+        toast.success(`${personasToInsert.length} registros cargados correctamente`, { id: 'import-loading' });
+        fetchData();
+      } catch (error: any) {
+        console.error('Error importing:', error);
+        toast.error(`Error al importar: ${error.message || 'Error desconocido'}`, { id: 'import-loading' });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    // Reset input
+    event.target.value = '';
   };
 
   if (loading) {
@@ -303,54 +430,190 @@ export default function Dashboard() {
             </p>
           </div>
           {isAdmin && (
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-success text-white rounded-xl font-medium hover:bg-success/90 transition-all shadow-lg shadow-success/20 w-full md:w-auto"
-            >
-              <Download className="w-5 h-5" />
-              Descargar Excel
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <button
+                onClick={() => navigate('/registrar-lider')}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 w-full"
+              >
+                <UserCog className="w-5 h-5" />
+                Registrar Líder
+              </button>
+              <button
+                onClick={() => navigate('/registrar-impulsor')}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 w-full"
+              >
+                <Zap className="w-5 h-5" />
+                Registrar Impulsor
+              </button>
+              <button
+                onClick={() => navigate('/registrar-votante')}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-sky-600 text-white rounded-xl font-medium hover:bg-sky-700 transition-all shadow-lg shadow-sky-500/20 w-full"
+              >
+                <UserCheck className="w-5 h-5" />
+                Registrar Amigo
+              </button>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleImportExcel}
+                  className="hidden"
+                  id="excel-upload"
+                />
+                <label
+                  htmlFor="excel-upload"
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 cursor-pointer w-full"
+                >
+                  <Upload className="w-5 h-5" />
+                  Cargar Excel
+                </label>
+              </div>
+              <button
+                onClick={handleExportExcel}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-success text-white rounded-xl font-medium hover:bg-success/90 transition-all shadow-lg shadow-success/20 w-full"
+              >
+                <Download className="w-5 h-5" />
+                Descargar Excel
+              </button>
+            </div>
+          )}
+          {!isAdmin && (
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <button
+                onClick={() => navigate('/registrar-impulsor')}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 w-full"
+              >
+                <Zap className="w-5 h-5" />
+                Registrar Impulsor
+              </button>
+              <button
+                onClick={() => navigate('/registrar-votante')}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-sky-600 text-white rounded-xl font-medium hover:bg-sky-700 transition-all shadow-lg shadow-sky-500/20 w-full"
+              >
+                <UserCheck className="w-5 h-5" />
+                Registrar Amigo
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Global Invitation Link (Admin only) */}
+        {/* Global Invitation Links (Admin only) */}
         {isAdmin && (
-          <div className="glass-panel p-6 mb-8 border-primary/20 bg-primary/5">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="flex-1">
-                <h2 className="text-xl font-display font-bold text-primary mb-2 flex items-center gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Lider Invitation */}
+            <div className="glass-panel p-6 border-primary/20 bg-primary/5">
+              <div className="flex flex-col items-start gap-4">
+                <h2 className="text-xl font-display font-bold text-primary flex items-center gap-2">
                   <Share2 className="w-5 h-5" />
                   Invitar Nuevo Líder
                 </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Envía este enlace para que un nuevo líder se registre él mismo en el sistema:
+                <p className="text-sm text-muted-foreground">
+                  Envía este enlace para que un nuevo líder se registre él mismo:
                 </p>
-                <div className="flex gap-2 p-3 bg-background border border-border rounded-xl font-mono text-xs overflow-x-auto mb-4 md:mb-0">
+                <div className="w-full flex gap-2 p-3 bg-background border border-border rounded-xl font-mono text-xs overflow-x-auto">
                   {`${window.location.origin}/registro`}
                 </div>
+                <div className="flex flex-wrap gap-2 w-full">
+                  <button
+                    onClick={() => {
+                      const baseUrl = window.location.origin;
+                      const msg = `Hola haz sido escogido en un grupo selecto para ser parte de este equipo ganador, como líder podrás ingresar tus colaboradores para hacer crecer nuestro sueño. Regístrate aquí: ${baseUrl}/registro`;
+                      navigator.clipboard.writeText(msg);
+                      toast.success('¡Invitación Líder copiada!');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl text-sm font-bold hover:bg-primary/20 transition-all"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copiar Mensaje
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hola haz sido escogido en un grupo selecto para ser parte de este equipo ganador, como líder podrás ingresar tus colaboradores para hacer crecer nuestro sueño. Regístrate aquí: ${window.location.origin}/registro`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-xl text-sm font-bold hover:bg-[#128C7E] transition-all"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                </div>
               </div>
-              <div className="flex flex-col gap-3 w-full md:w-auto">
-                <button
-                  onClick={() => {
-                    const baseUrl = window.location.origin;
-                    const msg = `Hola haz sido escogido en un grupo selecto para ser parte de este equipo ganador, como líder podrás ingresar tus colaboradores para hacer crecer nuestro sueño. Regístrate aquí: ${baseUrl}/registro`;
-                    navigator.clipboard.writeText(msg);
-                    toast.success('¡Invitación copiada al portapapeles!');
-                  }}
-                  className="btn-primary whitespace-nowrap"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copiar Mensaje Líder
-                </button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Hola haz sido escogido en un grupo selecto para ser parte de este equipo ganador, como líder podrás ingresar tus colaboradores para hacer crecer nuestro sueño. Regístrate aquí: ${window.location.origin}/registro`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-medium hover:bg-[#128C7E] transition-all shadow-lg shadow-green-500/20 whitespace-nowrap"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" /></svg>
-                  Enviar a WhatsApp
-                </a>
+            </div>
+
+            {/* Amigo Invitation */}
+            <div className="glass-panel p-6 border-accent/20 bg-accent/5">
+              <div className="flex flex-col items-start gap-4">
+                <h2 className="text-xl font-display font-bold text-accent flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Invitar Amigo
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Envía este enlace para que un nuevo amigo se registre en el sistema:
+                </p>
+                <div className="w-full flex gap-2 p-3 bg-background border border-border rounded-xl font-mono text-xs overflow-x-auto">
+                  {`${window.location.origin}/registro?lider=${encodeURIComponent(nombre || 'Administrador')}`}
+                </div>
+                <div className="flex flex-wrap gap-2 w-full">
+                  <button
+                    onClick={() => {
+                      const baseUrl = window.location.origin;
+                      const msg = `Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${baseUrl}/registro?lider=${encodeURIComponent(nombre || 'Administrador')}`;
+                      navigator.clipboard.writeText(msg);
+                      toast.success('¡Invitación Amigo copiada!');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-accent/10 text-accent border border-accent/20 rounded-xl text-sm font-bold hover:bg-accent/20 transition-all"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copiar Mensaje
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || 'Administrador')}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-xl text-sm font-bold hover:bg-[#128C7E] transition-all"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Impulsor Invitation */}
+            <div className="glass-panel p-6 border-purple-200 bg-purple-50 rounded-2xl">
+              <div className="flex flex-col items-start gap-4">
+                <h2 className="text-xl font-display font-bold text-purple-700 flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Invitar Impulsor
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Envía este enlace para que un nuevo impulsor electoral se registre:
+                </p>
+                <div className="w-full flex gap-2 p-3 bg-white border border-purple-200 rounded-xl font-mono text-xs overflow-x-auto">
+                  {`${window.location.origin}/registro?lider=${encodeURIComponent(nombre || 'Administrador')}&rol=impulsor`}
+                </div>
+                <div className="flex flex-wrap gap-2 w-full">
+                  <button
+                    onClick={() => {
+                      const baseUrl = window.location.origin;
+                      const msg = `Hola soy ${nombre}, te invito a ser parte de este grupo ganador como IMPULSOR ELECTORAL, ingresando al link para inscribirte: ${baseUrl}/registro?lider=${encodeURIComponent(nombre || 'Administrador')}&rol=impulsor`;
+                      navigator.clipboard.writeText(msg);
+                      toast.success('¡Invitación Impulsor copiada!');
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-sm font-bold hover:bg-purple-200 transition-all"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copiar Mensaje
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${nombre}, te invito a ser parte de este grupo ganador como IMPULSOR ELECTORAL, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || 'Administrador')}&rol=impulsor`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-xl text-sm font-bold hover:bg-[#128C7E] transition-all"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -373,33 +636,57 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="flex flex-col gap-3 w-full md:w-auto">
-                <button
-                  onClick={() => {
-                    const baseUrl = window.location.origin;
-                    const msg = `Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${baseUrl}/registro?lider=${encodeURIComponent(nombre || '')}`;
-                    navigator.clipboard.writeText(msg);
-                    toast.success('¡Mensaje copiado al portapapeles!');
-                  }}
-                  className="btn-primary whitespace-nowrap"
-                >
-                  Copiar Mensaje Invitación
-                </button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-medium hover:bg-[#25D366]/90 transition-all shadow-lg shadow-green-500/20"
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  Compartir en WhatsApp
-                </a>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      const baseUrl = window.location.origin;
+                      const msg = `Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${baseUrl}/registro?lider=${encodeURIComponent(nombre || '')}`;
+                      navigator.clipboard.writeText(msg);
+                      toast.success('¡Mensaje Amigo copiado!');
+                    }}
+                    className="flex-1 btn-primary whitespace-nowrap"
+                  >
+                    Invitar Amigo
+                  </button>
+                  <button
+                    onClick={() => {
+                      const baseUrl = window.location.origin;
+                      const msg = `Hola soy ${nombre}, te invito a ser parte de este grupo ganador como IMPULSOR ELECTORAL, lo puedes hacer ingresando al link para inscribirte: ${baseUrl}/registro?lider=${encodeURIComponent(nombre || '')}&rol=impulsor`;
+                      navigator.clipboard.writeText(msg);
+                      toast.success('¡Mensaje Impulsor copiado!');
+                    }}
+                    className="flex-1 bg-purple-600 text-white rounded-xl px-6 py-2.5 font-medium hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 whitespace-nowrap"
+                  >
+                    Invitar Impulsor
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${nombre}, te invito a ser parte de este grupo ganador, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-medium hover:bg-[#25D366]/90 transition-all shadow-lg shadow-green-500/20"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    WhatsApp Amigo
+                  </a>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hola soy ${nombre}, te invito a ser parte de este grupo ganador como IMPULSOR ELECTORAL, lo puedes hacer ingresando al link para inscribirte: ${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}&rol=impulsor`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-[#25D366] text-white rounded-xl font-medium hover:bg-[#25D366]/90 transition-all shadow-lg shadow-green-500/20"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    WhatsApp Impulsor
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {isAdmin && (
             <StatCard
               title="Total Líderes"
@@ -410,14 +697,19 @@ export default function Dashboard() {
             />
           )}
           <StatCard
-            title="Votantes"
+            title="Impulsores"
+            value={stats.totalImpulsores}
+            icon={Zap}
+            variant="default"
+            description={isAdmin ? 'Total de impulsores' : 'Tus impulsores'}
+          />
+          <StatCard
+            title="Amigos"
             value={stats.totalVotantes}
             icon={UserCheck}
             variant="default"
-            description={isAdmin ? 'Total de Votantes' : 'Tus Votantes'}
+            description={isAdmin ? 'Total de amigos' : 'Tus amigos'}
           />
-
-
         </div>
 
         {/* Status Cards */}
@@ -468,8 +760,8 @@ export default function Dashboard() {
 
           <div>
             <h2 className="text-xl font-display font-semibold mb-4 flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-primary" />
-              {isAdmin ? 'Resumen Votantes' : 'Mi Estado y Votantes'}
+              <Zap className="w-5 h-5 text-purple-600" />
+              Resumen Impulsores
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="stat-card border-l-4 border-l-warning">
@@ -478,7 +770,49 @@ export default function Dashboard() {
                     <Clock className="w-6 h-6 text-warning" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Votantes Pendientes</p>
+                    <p className="text-sm text-muted-foreground">Impulsores Pendientes</p>
+                    <p className="text-2xl font-bold font-display">{stats.impulsores.pendientes}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card border-l-4 border-l-success">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-success/10 rounded-xl">
+                    <CheckCircle className="w-6 h-6 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Impulsores Aprobados</p>
+                    <p className="text-2xl font-bold font-display">{stats.impulsores.aprobados}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="stat-card border-l-4 border-l-destructive">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-destructive/10 rounded-xl">
+                    <XCircle className="w-6 h-6 text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Impulsores Rechazados</p>
+                    <p className="text-2xl font-bold font-display">{stats.impulsores.rechazados}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-display font-semibold mb-4 flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-primary" />
+              {isAdmin ? 'Resumen Amigos' : 'Mi Estado y Amigos'}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="stat-card border-l-4 border-l-warning">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-warning/10 rounded-xl">
+                    <Clock className="w-6 h-6 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Amigos Pendientes</p>
                     <p className="text-2xl font-bold font-display">{stats.Votantes.pendientes}</p>
                   </div>
                 </div>
@@ -489,7 +823,7 @@ export default function Dashboard() {
                     <CheckCircle className="w-6 h-6 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Votantes Aprobados</p>
+                    <p className="text-sm text-muted-foreground">Amigos Aprobados</p>
                     <p className="text-2xl font-bold font-display">{stats.Votantes.aprobados}</p>
                   </div>
                 </div>
@@ -500,14 +834,105 @@ export default function Dashboard() {
                     <XCircle className="w-6 h-6 text-destructive" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Votantes Rechazados</p>
+                    <p className="text-sm text-muted-foreground">Amigos Rechazados</p>
                     <p className="text-2xl font-bold font-display">{stats.Votantes.rechazados}</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
+
+        {/* Territory Map Section (For Admins) */}
+        {isAdmin && (
+          <div className="mb-12">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+                  <Map className="w-7 h-7 text-primary" />
+                  Territorio Electoral
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Distribución geográfica de la meta electoral en el mapa de Antioquia
+                </p>
+              </div>
+              <div className="flex items-center gap-6 bg-card px-6 py-2.5 rounded-2xl border border-border shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-success" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Municipios Cubiertos: </span>
+                  <span className="text-sm font-bold text-primary">{mapMunicipiosData.filter(m => m.name !== 'No definido').length}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+              {/* Map Container */}
+              <div className="xl:col-span-3 glass-panel p-2 bg-[#f3f4f6] relative border border-border/50">
+                <div className="bg-[#f3f4f6] rounded-2xl overflow-hidden" style={{ height: '600px' }}>
+                  <MapaAntioquia municipiosData={mapMunicipiosData} />
+                </div>
+                {/* Map Floating Legend */}
+                <div className="absolute bottom-6 right-6 p-4 bg-white/90 backdrop-blur-sm rounded-2xl border border-border shadow-xl space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Densidad</p>
+                  {[
+                    { color: '#059669', label: '> 30' },
+                    { color: '#10b981', label: '15 - 30' },
+                    { color: '#34d399', label: '5 - 14' },
+                    { color: '#a7f3d0', label: '1 - 4' },
+                    { color: '#e5e7eb', label: '0' },
+                  ].map((l) => (
+                    <div key={l.label} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: l.color }} />
+                      <span className="text-[10px] font-bold text-foreground">{l.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top Municipios Summary */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  Zonas de Mayor Impacto
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {mapMunicipiosData.slice(0, 5).map((mun, idx) => (
+                    <div
+                      key={mun.name}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-lg transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black text-white"
+                          style={{ backgroundColor: getColorByCount(mun.count) }}
+                        >
+                          {mun.count}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{mun.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                            {mun.percentage.toFixed(1)}% del apoyo
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+                <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 mt-6">
+                  <p className="text-xs text-primary font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <TrendingUp className="w-3 h-3" />
+                    Análisis
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Los municipios en <span className="text-primary font-bold">Verde Esmeralda</span> representan el núcleo de tu fuerza electoral. Enfoca tus campañas de fidelización en estas zonas.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
 
 
@@ -520,7 +945,7 @@ export default function Dashboard() {
                   Distribución por Municipio de Votación
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  conteo de personas según el municipio donde tienen inscrito su puesto.
+                  conteo de amigos según el municipio donde tienen inscrito su puesto.
                 </p>
               </div>
               <button
@@ -708,7 +1133,18 @@ export default function Dashboard() {
                     puestosData.map((p: any, idx: number) => (
                       <div
                         key={p.name}
-                        className="group relative overflow-hidden p-6 bg-card border border-border rounded-3xl hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300"
+                        onClick={() => {
+                          const people = allPersonas.filter(per =>
+                            (per.municipio_puesto === selectedMunForPuestos || (!per.municipio_puesto && selectedMunForPuestos === 'No definido')) &&
+                            (per.puesto_votacion || 'Sin puesto') === p.name
+                          );
+                          setSelectedPuestoDetails({
+                            municipio: selectedMunForPuestos || 'No definido',
+                            puesto: p.name,
+                            personas: people
+                          });
+                        }}
+                        className="group relative overflow-hidden p-6 bg-card border border-border rounded-3xl hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
                         style={{ borderLeftWidth: '6px', borderLeftColor: CHART_COLORS[idx % CHART_COLORS.length] }}
                       >
                         <div className="flex justify-between items-start mb-4">
@@ -724,7 +1160,7 @@ export default function Dashboard() {
                         </h4>
                         <div className="flex items-end justify-between pt-4 border-t border-border/30">
                           <div>
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Colaboradores</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Amigos</p>
                             <p className="text-3xl font-black text-primary font-display">{p.value}</p>
                           </div>
                           <div className="text-right">
@@ -772,6 +1208,7 @@ export default function Dashboard() {
                     <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Mun. Puesto</th>
                     <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Puesto de Votación</th>
                     <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Mesa</th>
+                    <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Votos</th>
                     <th className="table-header py-4 px-6 text-xs uppercase tracking-wider">Notas</th>
                   </tr>
                 </thead>
@@ -819,6 +1256,9 @@ export default function Dashboard() {
                         <td className="py-4 px-6 text-muted-foreground text-sm font-medium">{persona.municipio_puesto || '-'}</td>
                         <td className="py-4 px-6 text-muted-foreground text-sm">{persona.puesto_votacion || '-'}</td>
                         <td className="py-4 px-6 text-muted-foreground text-sm">{persona.mesa_votacion || '-'}</td>
+                        <td className="py-4 px-6 text-muted-foreground text-sm text-center font-bold text-primary">
+                          {persona.votos_prometidos || '-'}
+                        </td>
                         <td className="py-4 px-6 text-muted-foreground text-sm max-w-[200px] truncate" title={persona.notas || ''}>
                           {persona.notas || '-'}
                         </td>
@@ -829,6 +1269,90 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
+        )}
+        {/* Modal Detalle Puesto */}
+        <Dialog open={!!selectedPuestoDetails} onOpenChange={(open) => !open && setSelectedPuestoDetails(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-display font-bold text-primary flex items-center gap-2">
+                <MapPin className="w-6 h-6" />
+                {selectedPuestoDetails?.puesto} - {selectedPuestoDetails?.municipio}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <div className="table-container max-h-[60vh] overflow-y-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="table-header py-3 px-4">Nombre</th>
+                      <th className="table-header py-3 px-4">Cédula</th>
+                      <th className="table-header py-3 px-4">Teléfono</th>
+                      <th className="table-header py-3 px-4 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedPuestoDetails?.personas.map((p) => (
+                      <tr key={p.cedula} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
+                        <td className="py-3 px-4 font-medium">{p.nombre_completo}</td>
+                        <td className="py-3 px-4 text-muted-foreground">{p.cedula}</td>
+                        <td className="py-3 px-4 text-muted-foreground">{p.telefono || '-'}</td>
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            onClick={() => setEditingPersona(p)}
+                            className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors focus:ring-2 focus:ring-primary/20 outline-none"
+                            title="Editar Amigo"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal Edición Persona */}
+        {editingPersona && (
+          <EditPersonaModal
+            person={editingPersona}
+            isOpen={!!editingPersona}
+            onClose={() => setEditingPersona(null)}
+            onSave={async (updated) => {
+              // Update local state temporarily or just refresh
+              const { error } = await supabase
+                .from('personas')
+                .update({
+                  municipio_puesto: updated.municipio_puesto,
+                  puesto_votacion: updated.puesto_votacion,
+                  mesa_votacion: updated.mesa_votacion,
+                  lugar_votacion: updated.lugar_votacion,
+                  estado: updated.estado,
+                  notas: updated.notas,
+                  telefono: updated.telefono,
+                  nombre_completo: updated.nombre_completo,
+                  email: updated.email
+                })
+                .eq('cedula', updated.cedula);
+
+              if (error) {
+                toast.error('Error al actualizar: ' + error.message);
+              } else {
+                toast.success('Amigo actualizado correctamente');
+                fetchData();
+                // Update the list inside the details modal too
+                if (selectedPuestoDetails) {
+                  const updatedList = selectedPuestoDetails.personas.map(per =>
+                    per.cedula === updated.cedula ? { ...per, ...updated } : per
+                  );
+                  setSelectedPuestoDetails({ ...selectedPuestoDetails, personas: updatedList });
+                }
+                setEditingPersona(null);
+              }
+            }}
+          />
         )}
       </div>
     </Layout >

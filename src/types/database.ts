@@ -1,5 +1,5 @@
 ﻿// Database types for Chimbolandia
-export type UserRole = 'lider' | 'asociado' | 'admin';
+export type UserRole = 'lider' | 'asociado' | 'admin' | 'impulsor';
 export type EstadoRegistro = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
 
 export interface Persona {
@@ -19,6 +19,7 @@ export interface Persona {
   mesa_votacion: string | null;
   estado: EstadoRegistro;
   vota_en_bello: boolean | null;
+  votos_prometidos?: number | null;
   notas?: string | null;
   fecha_registro: string;
   registrado_por: string | null;
@@ -36,13 +37,18 @@ export interface DashboardStats {
   totalLideres: number;
   totalVotantes: number;
   votanEnAntioquia: number;
-  noVotanAntioquia: number;
+  totalImpulsores: number;
   lideres: {
     pendientes: number;
     aprobados: number;
     rechazados: number;
   };
   Votantes: {
+    pendientes: number;
+    aprobados: number;
+    rechazados: number;
+  };
+  impulsores: {
     pendientes: number;
     aprobados: number;
     rechazados: number;

@@ -25,6 +25,7 @@ export default function RegistrarVotante() {
     municipio_puesto: '',
     puesto_votacion: '',
     mesa_votacion: '',
+    votos_prometidos: '',
     selectedLider: '', // New field for admin
   });
 
@@ -118,8 +119,8 @@ export default function RegistrarVotante() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion || !formData.municipio || !formData.telefono || !formData.municipio_puesto) {
-      setError('Por favor completa todos los campos requeridos (incluyendo Municipio de Votación)');
+    if (!formData.cedula || !formData.nombre || !formData.lugarVotacion || !formData.municipio || !formData.telefono || !formData.municipio_puesto || !formData.votos_prometidos) {
+      setError('Por favor completa todos los campos requeridos (incluyendo Municipio de Votación y cantidad de votos)');
       return;
     }
 
@@ -153,12 +154,12 @@ export default function RegistrarVotante() {
         .eq('rol', 'asociado');
 
       if (count !== null && count >= 60) {
-        setError('El líder seleccionado ya tiene el máximo de 60 Votantes');
+        setError('El líder seleccionado ya tiene el máximo de 60 Amigos');
         return;
       }
     } else {
       if (countVotantes !== null && countVotantes >= 60) {
-        setError('Ya tienes el máximo de 60 Votantes registrados');
+        setError('Ya tienes el máximo de 60 Amigos registrados');
         return;
       }
     }
@@ -205,6 +206,7 @@ export default function RegistrarVotante() {
         puesto_votacion: formData.puesto_votacion || null,
         mesa_votacion: formData.mesa_votacion || null,
         vota_en_bello: formData.municipio_puesto === 'Bello',
+        votos_prometidos: parseInt(formData.votos_prometidos) || 0,
         estado: calculateEstado,
         registrado_por: cedulaLider === 'admin' ? null : cedulaLider, // Always logged in user, but null if admin
       });
@@ -216,7 +218,7 @@ export default function RegistrarVotante() {
       if (effectiveLeader === cedulaLider) {
         setCountVotantes((prev) => (prev !== null ? prev + 1 : 1));
       }
-      toast.success('¡Votante registrado exitosamente!');
+      toast.success('¡Amigo registrado exitosamente!');
 
       // Reset form keeping selected leader
       setFormData({
@@ -229,6 +231,7 @@ export default function RegistrarVotante() {
         municipio_puesto: '',
         puesto_votacion: '',
         mesa_votacion: '',
+        votos_prometidos: '',
         selectedLider: formData.selectedLider,
       });
     } catch (err: any) {
@@ -245,10 +248,10 @@ export default function RegistrarVotante() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
-            Registrar Votante
+            Registrar Amigo que apoya
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Agrega un nuevo Votante a tu equipo ganador
+            Agrega un nuevo amigo a tu equipo ganador
           </p>
         </div>
 
@@ -259,7 +262,7 @@ export default function RegistrarVotante() {
               <UserPlus className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground font-medium">Votantes registrados</p>
+              <p className="text-sm text-muted-foreground font-medium">Amigos registrados</p>
               <p className="text-2xl font-bold font-display text-foreground">
                 {countVotantes !== null ? `${countVotantes} / 60` : '0 / 60'}
               </p>
@@ -279,10 +282,10 @@ export default function RegistrarVotante() {
               <div className="flex-1 w-full">
                 <h2 className="text-xl font-display font-bold text-primary mb-2 flex items-center gap-2">
                   <Share2 className="w-5 h-5" />
-                  Invitar Nuevo Votante
+                  Invitar Amigo
                 </h2>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Envía este enlace para que un nuevo Votante se registre él mismo en el sistema:
+                  Envía este enlace para que un nuevo amigo se registre él mismo en el sistema:
                 </p>
                 <div className="flex gap-2 p-3 bg-background border border-border rounded-xl font-mono text-xs overflow-x-auto w-full">
                   {`${window.location.origin}/registro?lider=${encodeURIComponent(nombre || '')}`}
@@ -324,7 +327,7 @@ export default function RegistrarVotante() {
               </div>
               <h3 className="text-xl font-display font-semibold mb-2">Límite Alcanzado</h3>
               <p className="text-muted-foreground">
-                Ya tienes registrados 60 Votantes, que es el máximo permitido.
+                Ya tienes registrados 60 amigos, que es el máximo permitido.
               </p>
             </div>
           ) : (
@@ -344,7 +347,7 @@ export default function RegistrarVotante() {
               )}
               <div>
                 <label htmlFor="cedula" className="block text-sm font-medium mb-2">
-                  Cédula del Votante <span className="text-destructive">*</span>
+                  Cédula del Amigo <span className="text-destructive">*</span>
                 </label>
                 <input
                   id="cedula"
@@ -452,19 +455,38 @@ export default function RegistrarVotante() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="mesa_votacion" className="block text-sm font-medium mb-2">
-                  Mesa de Votación
-                </label>
-                <input
-                  id="mesa_votacion"
-                  name="mesa_votacion"
-                  type="text"
-                  value={formData.mesa_votacion}
-                  onChange={handleChange}
-                  placeholder="Ej: 5"
-                  className="input-field"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="mesa_votacion" className="block text-sm font-medium mb-2">
+                    Mesa de Votación
+                  </label>
+                  <input
+                    id="mesa_votacion"
+                    name="mesa_votacion"
+                    type="text"
+                    value={formData.mesa_votacion}
+                    onChange={handleChange}
+                    placeholder="Ej: 5"
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="votos_prometidos" className="block text-sm font-medium mb-2">
+                    ¿CON CUANTO VOTOS AYUDA? <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    id="votos_prometidos"
+                    name="votos_prometidos"
+                    type="number"
+                    min="1"
+                    value={formData.votos_prometidos}
+                    onChange={handleChange}
+                    placeholder="Ej: 10"
+                    className="input-field"
+                    required
+                  />
+                </div>
               </div>
 
 
@@ -480,7 +502,7 @@ export default function RegistrarVotante() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-4 bg-success/10 text-success rounded-lg">
                     <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                    <span>¡Votante registrado exitosamente!</span>
+                    <span>¡Amigo registrado exitosamente!</span>
                   </div>
 
                   <a
@@ -509,7 +531,7 @@ export default function RegistrarVotante() {
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Registrar Votante
+                    Registrar Amigo
                     <ArrowRight className="w-4 h-4" />
                   </span>
                 )}
