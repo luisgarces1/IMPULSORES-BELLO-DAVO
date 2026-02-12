@@ -5,6 +5,7 @@ import { Vote, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, Copy, Share2 } f
 import { toast } from 'sonner';
 import { LUGARES_VOTACION, MUNICIPIOS_ANTIOQUIA } from '@/constants/locations';
 import { SearchableSelect } from '@/components/SearchableSelect';
+import logoDavo from '../assets/logo-davo.jpeg';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -330,11 +331,11 @@ export default function Registro() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Vote className="w-5 h-5 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-border shadow-sm">
+              <img src={logoDavo} alt="Logo DAVO" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="font-display font-bold">Impulsores Electorales</h1>
+              <h1 className="font-display font-bold">IMPULSORES DAVO</h1>
               <p className="text-xs text-muted-foreground">
                 {liderId ? (roleParam === 'impulsor' ? 'Registro de Impulsor' : 'Registro de Amigo') : 'Registro de Líder'}
               </p>

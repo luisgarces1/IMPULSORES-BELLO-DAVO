@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Vote, Shield, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import logoDavo from '../assets/logo-davo.jpeg';
 
 // Lazy load heavy components to prevent initial bundle crash
 const FaceLogin = lazy(() => import('@/components/face-auth/FaceLogin'));
@@ -107,12 +108,12 @@ export default function Login() {
         <div className="absolute inset-0 bg-primary/20" />
         <div className="relative z-10 flex flex-col justify-center p-12 text-primary-foreground">
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center">
-              <Vote className="w-8 h-8" />
+            <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden flex items-center justify-center p-0.5 shadow-2xl">
+              <img src={logoDavo} alt="Logo DAVO" className="w-full h-full object-cover rounded-xl" />
             </div>
           </div>
           <h1 className="text-5xl font-display font-bold mb-4 uppercase">
-            Impulsores Electorales
+            IMPULSORES DAVO
           </h1>
           <p className="text-xl text-primary-foreground/80 mb-8 max-w-md">
             Sistema de gestión de impulsores electorales
@@ -166,11 +167,11 @@ export default function Login() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <Vote className="w-6 h-6 text-primary-foreground" />
+            <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-border shadow-sm">
+              <img src={logoDavo} alt="Logo DAVO" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-xl">Impulsores Electorales</h1>
+              <h1 className="font-display font-bold text-xl">IMPULSORES DAVO</h1>
               <p className="text-sm text-muted-foreground font-medium">Gestión Estratégica</p>
             </div>
           </div>

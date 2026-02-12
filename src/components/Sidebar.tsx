@@ -21,6 +21,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import logoDavo from '../assets/logo-davo.jpeg';
 
 export function Sidebar() {
   const { nombre, isAdmin, logout, cedula } = useAuth();
@@ -106,8 +107,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <Vote className="w-5 h-5 text-sidebar-primary-foreground" />
+          <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-sidebar-border">
+            <img src={logoDavo} alt="Logo DAVO" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-display font-bold text-sidebar-foreground text-lg">
