@@ -103,63 +103,13 @@ export default function Login() {
       {/* Left Panel - Branding */}
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
-        style={{ background: 'var(--gradient-hero)' }}
       >
-        <div className="absolute inset-0 bg-primary/20" />
-        <div className="relative z-10 flex flex-col justify-center p-12 text-primary-foreground">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden flex items-center justify-center p-0.5 shadow-2xl">
-              <img src={logoDavo} alt="Logo DAVO" className="w-full h-full object-cover rounded-xl" />
-            </div>
-          </div>
-          <h1 className="text-5xl font-display font-bold mb-4 uppercase">
-            IMPULSORES DAVO
-          </h1>
-          <p className="text-xl text-primary-foreground/80 mb-8 max-w-md">
-            Sistema de gestión de impulsores electorales
-          </p>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 text-primary-foreground/90">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                <span className="text-xl">🔹</span>
-              </div>
-              <span className="font-medium">Estrategia estructurada para captar votantes</span>
-            </div>
-            <div className="flex items-center gap-3 text-primary-foreground/90">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                <span className="text-xl">🔹</span>
-              </div>
-              <span className="font-medium">Segmentación estratégica (por municipios, lugar de votacion).</span>
-            </div>
-            <div className="flex items-center gap-3 text-primary-foreground/90">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                <span className="text-xl">🔹</span>
-              </div>
-              <span className="font-medium">Acciones concretas: mensajes y seguimiento.</span>
-            </div>
-            <div className="flex items-center gap-3 text-primary-foreground/90">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                <span className="text-xl">🔹</span>
-              </div>
-              <span className="font-medium">Métricas en tiempo real para mejorar decisiones.</span>
-            </div>
-            <div className="flex items-center gap-3 text-primary-foreground/90">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                <span className="text-xl">🔹</span>
-              </div>
-              <span className="font-medium">Aumenta la eficiencia de tu equipo de campo</span>
-            </div>
-            <div className="flex items-center gap-3 text-primary-foreground/90">
-              <div className="w-8 h-8 rounded-lg bg-primary-foreground/10 flex items-center justify-center shrink-0">
-                <span className="text-xl">🔹</span>
-              </div>
-              <span className="font-medium">Transforma contactos en votos</span>
-            </div>
-          </div>
-        </div>
-        {/* Decorative circles */}
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-accent/20 blur-3xl" />
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary-foreground/10 blur-3xl" />
+        <img
+          src={logoDavo}
+          alt="Branding"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/10" />
       </div>
 
       {/* Right Panel - Login Form */}
